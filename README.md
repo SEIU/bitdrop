@@ -1,29 +1,8 @@
-# docker-lufi
+# bitdrop
 
-## Projet Lufi
+This is a long-divergent fork of the Lufi project.  See https://github.com/ldidry/lufi.
 
-https://framagit.org/fiat-tux/hat-softwares/lufi#tab-readme
+The history of that project remains in the git log of this one.
 
-## Compose
-
-### `docker-compose.yml`
-
-	services:
-	  app:
-	    image: s7b4/lufi
-	    init: true
-	    network_mode: bridge
-	    ports:
-	    - 8080:8080/tcp
-	    restart: always
-	version: '2.2'
-
-## Cron lufi
-
-### Nettoyage de la db
-
-	docker-compose exec app docker-carton exec script/lufi cron cleanbdd --mode production
-
-### Nettoyage des fichiers
-
-	docker-compose exec app docker-carton exec script/lufi cron cleanfiles --mode production
+However, because of an odd merge history, the merges since the divergence are not retained there. 
+They are listed in git-log-fork.txt.
