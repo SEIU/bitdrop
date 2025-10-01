@@ -343,27 +343,27 @@
 }
 
 .purple {
-  background-color: #9c27b0 !important;
+  background-color: #582C83 !important;
 }
 
 .purple-text {
-  color: #9c27b0 !important;
+  color: #582C83 !important;
 }
 
 .purple.darken-1 {
-  background-color: #8e24aa !important;
+  background-color: #582C83 !important;
 }
 
 .purple-text.text-darken-1 {
-  color: #8e24aa !important;
+  color: #582C83 !important;
 }
 
 .purple.darken-2 {
-  background-color: #7b1fa2 !important;
+  background-color: #582C83 !important;
 }
 
 .purple-text.text-darken-2 {
-  color: #7b1fa2 !important;
+  color: #582C83 !important;
 }
 
 .purple.darken-3 {
@@ -3187,7 +3187,7 @@ nav ul a span.badge {
   height: 4px;
   display: block;
   width: 100%;
-  background-color: #acece6;
+  background-color: #ffeb3b;
   border-radius: 2px;
   margin: 0.5rem 0 1rem 0;
   overflow: hidden;
@@ -3199,12 +3199,12 @@ nav ul a span.badge {
   top: 0;
   left: 0;
   bottom: 0;
-  background-color: #26a69a;
+  background-color: #ffeb3b;
   transition: width .3s linear;
 }
 
 .progress .indeterminate {
-  background-color: #26a69a;
+  background-color: #ffeb3b;
 }
 
 .progress .indeterminate:before {

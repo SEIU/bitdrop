@@ -25,7 +25,7 @@
             <div class="input-field">
                 <input type="password" id="file_pwd" placeholder="<%= l('Password') %>" class="validate">
             </div>
-            <a id="go" class="waves-effect waves-light btn"><%= l('Download') %></a>
+            <a id="go" class="waves-effect waves-light btn purple"><%= l('Download') %></a>
         </div>
         %   }
         <div class="file-progress col s12<%= (stash('file_pwd')) ? ' hide' : '' %>">
@@ -39,13 +39,12 @@
             </div>
         </div>
         <div class="file-abort col s12<%= (stash('file_pwd')) ? ' hide' : '' %>">
-            <a id="abort" class="waves-effect waves-light btn"><%= l('Abort') %></a>
+            <a id="abort" class="waves-effect waves-light btn purple"><%= l('Abort') %></a>
         </div>
 %= javascript '/partial/render.js?nbslices='.stash('f')->nbslices.'&file='.stash('f')->short
 %= javascript '/js/filesize.min.js'
 %= javascript '/js/sjcl.js'
 %= javascript '/js/jszip.min.js'
-%= javascript '/js/lufi-notifications.js'
 %= javascript '/js/lufi-down.js'
     % }
 % }

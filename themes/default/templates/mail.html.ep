@@ -10,7 +10,7 @@
     </div>
 % }
     <div class="col s12">
-        <div class="card cyan">
+        <div class="card purple">
             <div class="card-content white-text">
                 <p><%= l('If you send the mail from this server, the links will be sent to the server, which may lower your privacy protection.') %></p>
                 <p><%= l('Adding URLs not related to this Lufi instance to the mail body or subject is prohibited.') %></p>
@@ -43,10 +43,9 @@
 % }
             </textarea>
         </div>
-        % if (!$self->config('disable_mail_sending')) {
-            <button type="submit" class="btn btn-info"><%= l('Send with this server') %></button>
-        % }
+        <button type="submit" class="btn btn-info"><%= l('Send with this server') %></button>
         <a href="#" class="btn btn-primary" id="mailto"><%= l('Send with your own mail software') %></a>
     </form>
 <div>
 %= javascript url_for('/partial/mail.js')->query(populate => (!defined(stash('msg')) && !defined(stash('values'))), links => $links)
+%= javascript '/js/moment-with-locales.min.js'

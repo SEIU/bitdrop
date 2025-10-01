@@ -9,11 +9,11 @@
     <%= l('Rows in purple mean that the invitations have expired.') %>
 </p>
 <div class="invitations-buttons">
-    <a href="#" id="invertSelection"  class="btn left-mg cyan"><%= l('Invert selection') %></a>
-    <a href="#" id="toggleHidden"     class="btn left-mg cyan"><%= l('Show hidden invitations') %></a>
-    <a href="#" id="deleteInvit"      class="btn left-mg cyan disabled" disabled><%= l('Delete') %></a>
-    <a href="#" id="resendMail"       class="btn left-mg cyan disabled" disabled><%= l('Resend invitation mail') %></a>
-    <a href="#" id="toggleVisibility" class="btn left-mg cyan disabled" disabled><%= l('Toggle visibility') %></a>
+    <a href="#" id="invertSelection"  class="btn left-mg purple"><%= l('Invert selection') %></a>
+    <a href="#" id="toggleHidden"     class="btn left-mg purple"><%= l('Show hidden invitations') %></a>
+    <a href="#" id="deleteInvit"      class="btn left-mg purple disabled" disabled><%= l('Delete') %></a>
+    <a href="#" id="resendMail"       class="btn left-mg purple disabled" disabled><%= l('Resend invitation mail') %></a>
+    <a href="#" id="toggleVisibility" class="btn left-mg purple disabled" disabled><%= l('Toggle visibility') %></a>
 </div>
 
 <div>
@@ -57,7 +57,7 @@
                            data-files="<%= $e->files %>"
                            data-token="<%= $e->token %>"
                            data-guest="<%= $e->guest_mail %>"
-                           class="btn left-mg cyan waves-effect waves-light modal-trigger prefix">
+                           class="btn left-mg purple waves-effect waves-light modal-trigger prefix">
                             <%= l('Files') %>
                         </a>
                     % }
@@ -83,4 +83,5 @@
 
 %= javascript '/partial/invitations.js'
 %= javascript '/js/lufi-list-invitations.js'
+%= javascript '/js/moment-with-locales.min.js'
 %= javascript '/js/filesize.min.js'

@@ -1,0 +1,13 @@
+[Unit]
+Description=bitdrop
+After=network.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=ubuntu
+ExecStart=/home/ubuntu/docker-lufi/run_prod.sh
+
+[Install]
+WantedBy=multi-user.target
