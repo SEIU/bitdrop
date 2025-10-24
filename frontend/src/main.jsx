@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { BrowserRouter, Routes, Route } from "react-router";
-import Upload from "./pages/Upload.jsx";
+import Upload from "./pages/Upload/Upload.jsx";
 import Download from "./pages/Download.jsx";
 import ReactDOM from "react-dom/client";
 import "./index.css";
