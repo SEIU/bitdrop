@@ -1,26 +1,20 @@
 #!/bin/bash
-set -euo pipefail
+# Install tools used by the script, if not present
+sudo apt-get -y install net-tools jq coreutils 
 
 # Install uv
 export PATH="$PATH:$HOME/.local/bin"
-if [ "$(which uv)" == "" ]; then
-    echo "Installing uv..."
-    curl -LsSf https://astral.sh/uv/install.sh | sh;
-fi
+curl -LsSf https://astral.sh/uv/install.sh | sh;
 
-# Install Python and libraries
-echo "Installing Python and library requirements..."
-uv sync
-source .venv/bin/activate
+# Include ada-unified dir in PYTHONPATH
+export PYTHONPATH="$PYTHONPATH:$HOME/ada-unified/server"
 
-# Install node/npm and serve
-mkdir -p $HOME/bin
-export NODE_VER='node-v22.13.0-linux-x64'
-export PATH="$HOME/bin/$NODE_VER/bin/:$PATH"
-export NODE='https://nodejs.org/dist/v22.13.0/node-v22.13.0-linux-x64.tar.xz'
-if [ "$(which npm)" == "" ]; then
-    wget -q -O- $NODE | tar xJ -C $HOME/bin
-fi
+# Download and install nvm:
+curl -so- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+
+# Configure nvm function and then install node, npm, and serve:
+source "$HOME/.nvm/nvm.sh"
+nvm install 22
 npm --silent install -g serve
 
 # Rotate logs
