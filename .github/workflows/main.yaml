@@ -30,7 +30,7 @@ jobs:
         env:
           INSTANCE: ubuntu@44.228.185.80
         run: |
-          rsync -a $PWD $INSTANCE:/home/ec2-user --delete
+          rsync -a $PWD $INSTANCE:/home/ubuntu --delete
           ssh -o StrictHostKeyChecking=no $INSTANCE -t 'bash -l -c "
               cd $HOME/BitDrop
               bin/make-certs
