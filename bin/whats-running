@@ -1,0 +1,5 @@
+#!/bin/bash
+ps ax | grep gunicorn | grep -v grep | cut -c-8,30-88 |
+    sed 's~/home/ubuntu/bitdrop/.venv/bin/~~'
+ps ax | grep 'node'  | grep -v grep | grep -v uv | cut -c-8,30-
+

@@ -65,6 +65,6 @@ uv run python -m gunicorn \
     --access-logfile - \
     --error-logfile - \
     --bind 0.0.0.0:8443 \
-    --keyfile temp/server.key \
-    --certfile temp/server.crt \
+    --keyfile ../temp/server.key \
+    --certfile ../temp/server.crt \
     > $BACKEND_LOG 2>&1 & disown >/dev/null 2>&1
