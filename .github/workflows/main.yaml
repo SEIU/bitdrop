@@ -1,0 +1,38 @@
+name: CI/CD Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run backend tests
+        run: |
+          export PATH="$PATH:$HOME/.local/bin"
+          if [ "$(which uv)" == "" ]; then
+            curl -LsSf https://astral.sh/uv/install.sh | sh;
+          fi
+          source $HOME/.local/bin/env
+          export PYTHONPATH="$PYTHONPATH:."
+          uv run pytest -W ignore .
+
+      - name: Deploy to main
+        if: github.ref == 'refs/heads/main'
+        env:
+          INSTANCE: ubuntu@44.228.185.80
+        run: |
+          rsync -a $PWD $INSTANCE:/home/ec2-user --delete
+          ssh -o StrictHostKeyChecking=no $INSTANCE -t 'bash -l -c "
+              cd $HOME/BitDrop
+              bin/make-certs
+              ./deploy.sh
+          "'
