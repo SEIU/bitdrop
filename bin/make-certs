@@ -1,0 +1,24 @@
+#!/bin/bash
+if [ ! -d temp ]; then
+    echo "Generating certificates for BitDrop"
+    mkdir -p temp
+    openssl req \
+      -batch \
+      -x509 \
+      -nodes \
+      -days 365 \
+      -newkey rsa:2048 \
+      -subj "/C=US/O=SEIU/OU=DSA/CN=bitdropca" \
+      -keyout temp/ca.key \
+      -out temp/ca.crt
+    echo '01' > temp/ca.srl
+    touch temp/index.txt
+    echo 'unique_subject = yes' > temp/index.txt.attr
+    openssl ca -batch -gencrl -config openssl.cnf -out temp/ca.crl.pem
+    openssl crl -in temp/ca.crl.pem -outform DER -out temp/ca.crl.der
+    openssl genrsa -out temp/server.key 2048
+    openssl req -new -config openssl.cnf -key temp/server.key \
+      -subj "/C=US/O=SEIU/OU=DSA/CN=bitdroplocal" -out temp/server.csr
+    openssl ca -batch -config openssl.cnf -extensions server_ext -notext \
+      -in temp/server.csr -out temp/server.crt
+fi
