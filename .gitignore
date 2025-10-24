@@ -1,16 +1,72 @@
-local/*
-files/*
-cover_db/*
-*.conf
-*.db
-*.db-shm
-*.db-wal
-*.bak
-*.swp
+# Byte-compiled / optimized / compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Editors
+.vscode/
+.idea/
+
+# OS Specific
 .DS_Store
-script/*.pid
-stop-upload
-.zanata-cache/
-themes/*
-!themes/default
-!themes/default/*
+Thumbs.db
+
+# Django specific (if applicable)
+*.log
+local_settings.py
+db.sqlite3
+
+# Jupyter Notebook (if applicable)
+.ipynb_checkpoints
+
+# dependencies
+/node_modules
+
+# testing
+/coverage
+
+# production
+/build
+/dist
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp
+.pnp.js
