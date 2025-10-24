@@ -32,7 +32,7 @@ jobs:
         run: |
           rsync -a $PWD $INSTANCE:/home/ubuntu --delete
           ssh -o StrictHostKeyChecking=no $INSTANCE -t 'bash -l -c "
-              cd $HOME/BitDrop
+              cd $HOME/bitdrop
               bin/make-certs
               ./deploy.sh
           "'
