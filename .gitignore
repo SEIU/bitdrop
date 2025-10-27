@@ -51,6 +51,7 @@ db.sqlite3
 
 # dependencies
 /node_modules
+/.vite
 
 # testing
 /coverage
