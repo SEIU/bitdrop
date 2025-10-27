@@ -31,12 +31,12 @@ async def upload_file(
     return JSONResponse(content={"id": id, "filename": filename, "timestamp": ts})
 
 
-@app.get("/api/dowload/{id}")
+@app.get("/api/download/{id}")
 def download_file(id: str) -> JSONResponse:
     "Download a file by its ID token"
     uploads_dir = Path.home() / "uploads"
 
-    matches = list(uploads_dir.glob(f"**/{id}/**"))
+    matches = list(uploads_dir.glob(f"*/{id}/*/*"))
     if not matches:
         return JSONResponse(
             content={"message": f"No file found with ID {id}"}, status_code=404
@@ -47,12 +47,13 @@ def download_file(id: str) -> JSONResponse:
         )
     else:
         file = matches[0]
-        _, _, raw_hash, filename = file.parts
-        base64_content = base64.b64encode(file.read_bytes())
+        *_, raw_hash, filename = file.parts
+        base64_content = base64.b64encode(file.read_bytes()).decode()
+        print(f"XXX {raw_hash=} {filename=} {base64_content=}")
         return JSONResponse(
             content={
-                "filename": filename,
-                "raw_hash": raw_hash,
+                "filename": f"{filename}",
+                "raw_hash": f"{raw_hash}",
                 "base64_content": base64_content,
             }
         )
