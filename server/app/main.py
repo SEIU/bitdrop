@@ -1,7 +1,7 @@
 import base64
 from datetime import datetime
 from pathlib import Path
-from typing import Annotated
+import shutil
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -49,7 +49,6 @@ def download_file(id: str) -> JSONResponse:
         file = matches[0]
         *_, raw_hash, filename = file.parts
         base64_content = base64.b64encode(file.read_bytes()).decode()
-        print(f"XXX {raw_hash=} {filename=} {base64_content=}")
         return JSONResponse(
             content={
                 "filename": f"{filename}",
@@ -64,15 +63,16 @@ def delete_file(id: str, raw_hash: str) -> JSONResponse:
     "Delete a file by its ID and raw hash"
     uploads_dir = Path.home() / "uploads"
 
-    matches = list(uploads_dir.glob(f"**/{id}/{raw_hash}/**"))
+    matches = list(uploads_dir.glob(f"*/{id}/{raw_hash}/*"))
     if not matches:
         return JSONResponse(
-            content={"message": f"No file found with ID {id} and raw hash {raw_hash}"},
+            content={"message": f"No file found with ID {id} and hash {raw_hash}"},
             status_code=404,
         )
     else:
         for file in matches:
-            file.unlink()
+            ts_dir = file.parent.parent.parent
+            shutil.rmtree(ts_dir)
 
         return JSONResponse(
             content={"message": f"File with ID {id} and raw hash {raw_hash} deleted"}
