@@ -75,5 +75,5 @@ def delete_file(id: str, raw_hash: str) -> JSONResponse:
             shutil.rmtree(ts_dir)
 
         return JSONResponse(
-            content={"message": f"File with ID {id} and raw hash {raw_hash} deleted"}
+            content={"message": f"File with ID {id} and hash {raw_hash} deleted"}
         )
