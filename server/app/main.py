@@ -3,15 +3,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 
-from fastapi import Body, FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
 app = FastAPI()
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+async def parse_body(request: Request):
+    data: bytes = await request.body()
+    return data
 
 
 @app.post("/api/upload/{id}/{raw_hash}/{filename}")
@@ -19,7 +19,7 @@ async def upload_file(
     id: str,
     raw_hash: str,
     filename: str,
-    file: Annotated[bytes, Body()],
+    file: bytes = Depends(parse_body),
 ) -> JSONResponse:
     "Store raw bytes of an uploaded file"
     ts = datetime.now().isoformat(timespec="seconds")
