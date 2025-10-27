@@ -18,6 +18,7 @@ dev = [
     "pre-commit>=4.0.1",
     "pytest >=8.3.3",
     "pytest-dependency>=0.6.0",
+    "ruff",
 ]
 [tool.ruff]
 # Allow lines to 88 chars (Black compatible).
