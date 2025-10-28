@@ -14,6 +14,12 @@ async def parse_body(request: Request):
     return data
 
 
+@app.get("/")
+async def root() -> str:
+    "Welcome to the file exchange service"
+    return "Welcome to SEIU BitDrop!"
+
+
 @app.post("/api/upload/{id}/{raw_hash}/{filename}")
 async def upload_file(
     id: str,
