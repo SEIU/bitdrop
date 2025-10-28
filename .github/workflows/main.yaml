@@ -22,8 +22,8 @@ jobs:
             curl -LsSf https://astral.sh/uv/install.sh | sh;
           fi
           source $HOME/.local/bin/env
-          export PYTHONPATH="$PYTHONPATH:."
-          uv run pytest -W ignore .
+          export PYTHONPATH="$PYTHONPATH:$PWD/server"
+          uv run pytest .
 
       - name: Deploy to main
         if: github.ref == 'refs/heads/main'
