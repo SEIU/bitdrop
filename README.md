@@ -26,10 +26,10 @@ interface:
 
 ---
 
-| SEIU BitDrop    |  
+| SEIU BitDrop    |                                             |
 | --------------: | :------------------------------------------ |
 | Password:       | \<enter-password\>                          |
-| **\[Download Now\]**                                          |
+| **\[Download Now\]**                                         ||
 
 ---
 
