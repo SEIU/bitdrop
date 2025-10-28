@@ -1,10 +1,16 @@
+import { useEffect } from "react";
 import Uploader from "./Uploader";
+import { generatePassword } from "../../utils/generatePassword";
 import { Container, Box, Typography } from "@mui/material";
 
 export default function Upload() {
-  const handleFileUpload = (upload) => {
-    console.log(upload);
+  const handleFileDrop = (file) => {
+    console.log(file);
   };
+
+  useEffect(() => {
+    generatePassword();
+  }, []);
 
   return (
     <Container>
@@ -21,7 +27,7 @@ export default function Upload() {
       </Box>
 
       <Box>
-        <Uploader handleFileUpload={handleFileUpload} />
+        <Uploader handleFileDrop={handleFileDrop} />
       </Box>
     </Container>
   );

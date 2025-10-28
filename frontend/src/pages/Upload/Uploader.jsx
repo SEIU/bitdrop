@@ -15,7 +15,7 @@ const dropZoneStyles = {
   marginBottom: "1.5rem",
 };
 
-export default function Uploader({ handleFileUpload }) {
+export default function Uploader({ handleFileDrop }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -29,7 +29,7 @@ export default function Uploader({ handleFileUpload }) {
 
     const response = await uploadFile(args);
     if (!response.error && response.data) {
-      handleFileUpload(response.data);
+      handleFileDrop(response.data);
     } else {
       // handle failure
     }
