@@ -16,60 +16,26 @@ const dropZoneStyles = {
 };
 
 export default function Uploader({ handleFileDrop }) {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const onDrop = (fileToUpload) => {
-    setSelectedFile(fileToUpload[0]);
-    setSelectedFileName(fileToUpload[0].path);
-  };
-
-  const beginUpload = async () => {
-    setLoading(true);
-
-    const response = await uploadFile(args);
-    if (!response.error && response.data) {
-      handleFileDrop(response.data);
-    } else {
-      // handle failure
-    }
-    setLoading(false);
+  const onDrop = (selectedFile) => {
+    handleFileDrop(selectedFile);
   };
 
   return (
     <>
       <Box sx={dropZoneStyles}>
-        {!loading ? (
-          selectedFile ? (
-            <>
-              <Typography sx={{ fontSize: "1.3rem", marginBottom: "15px" }}>
-                File name here?
-              </Typography>
+        <Dropzone onDrop={onDrop}>
+          {({ getRootProps, getInputProps }) => (
+            <Box {...getRootProps()}>
+              <input {...getInputProps()} />
               <Box>
-                <Button onClick={() => setSelectedFile(null)}>Cancel</Button>
-                <Button onClick={beginUpload}>Upload</Button>
+                <CloudUploadIcon />
+                <Typography>
+                  Drag & drop a file here, or click to select a file
+                </Typography>
               </Box>
-            </>
-          ) : (
-            <Dropzone onDrop={onDrop}>
-              {({ getRootProps, getInputProps }) => (
-                <Box {...getRootProps({ className: "dropzone" })}>
-                  <input {...getInputProps()} data-testid="file-input" />
-                  <Box>
-                    <CloudUploadIcon />
-                    <Typography>
-                      Drag & drop a file here, or click to select a file
-                    </Typography>
-                  </Box>
-                </Box>
-              )}
-            </Dropzone>
-          )
-        ) : (
-          <Box>
-            <CircularProgress />
-          </Box>
-        )}
+            </Box>
+          )}
+        </Dropzone>
       </Box>
     </>
   );
