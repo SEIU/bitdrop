@@ -59,7 +59,7 @@ interface:
 In pseudo-code, the download screen will perform these actions:
 
 ```javascript
-const response = await fetch("https://api.b.seiu.org/download?38924387091");
+const response = await fetch("https://api.b.seiu.org/download/38924387091");
 if (!response.ok) { ... handle missing file ... }
 
 const result = await response.json();
