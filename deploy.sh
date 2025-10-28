@@ -40,18 +40,18 @@ done
 
 # Start the Node server
 echo "TODO: Launching the Node server..."
-# cd $HOME/bitdrop/frontend
-# npm --silent install --production
-# npm install vite # TODO: Is this really a sound approach?
-# npm run build
-# # Check for npm install errors
-# if [ $? -ne 0 ]; then
-#     echo "Error occurred during npm install!"
-#  zR   exit 1
-# fi
-# mkdir -p $HOME/log
-# FRONTEND_LOG="$HOME/log/frontend-$(date +"%Y-%m-%d-%H-%M-%S").log"
-# serve -s dist -l 3000 > $FRONTEND_LOG 2>&1 & disown >/dev/null 2>&1
+cd $HOME/bitdrop/frontend
+npm --silent install --production
+npm install vite # TODO: Is this really a sound approach?
+npm run build
+# Check for npm install errors
+if [ $? -ne 0 ]; then
+    echo "Error occurred during npm install!"
+ zR   exit 1
+fi
+mkdir -p $HOME/log
+FRONTEND_LOG="$HOME/log/frontend-$(date +"%Y-%m-%d-%H-%M-%S").log"
+serve -s dist -l 3000 > $FRONTEND_LOG 2>&1 & disown >/dev/null 2>&1
 
 # Start the FastAPI server
 echo "Launching the FastAPI server..."
