@@ -4,13 +4,13 @@ The interface of "new BitDrop" resembles the prevous implementation. In simple w
 
 ---
 
-| SEIU BitDrop    | 
+| SEIU BitDrop    |                                              |
 | --------------: | :------------------------------------------- | 
 | Password:       | prefilled-passphrase-random-words            |
 | Choose File:    | \<file-selection-widget\>                    |
 | Email Files To: | \<enter-email-address\> (URL not shown)      |
 | Deletion Link:  | b.seiu.org/delete?id=kETG3DX0Hs              |
-| **\[Upload Now\]**                                             |
+| **\[Upload Now\]**                                            ||
 
 | Notices
 |:---------------------------------------------------------------:
