@@ -13,8 +13,8 @@ ReactDOM.createRoot(rootElement).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />}>
-          <Route path="foo" element={<Upload />} />
-          <Route path="bar" element={<Download />} />
+          <Route index element={<Upload />} />
+          <Route path="verify" element={<Download />} />
         </Route>
       </Routes>
     </BrowserRouter>
