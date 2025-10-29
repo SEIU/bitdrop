@@ -66,7 +66,7 @@ const result = await response.json();
 const content = decrypt(atob(result.base64_content), password);
 const encoder = new TextEncoder();
 const data = encoder.encode(content);
-const hashBuffer = await window.crypto.subtle.digest('SHA-1', data);
+const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
 
 // Convert the hash to a hex string
 const hashArray = Array.from(new Uint8Array(hashBuffer));
