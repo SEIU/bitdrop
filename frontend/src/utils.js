@@ -1,6 +1,14 @@
 import axios from "axios";
 const PASSWORD_LENGTH = 4;
 
+export function getBackendUrl() {
+  const developmentUrl = "http://127.0.0.1:8000";
+  if (window.location.hostname === "localhost") {
+    return developmentUrl;
+  }
+  return import.meta.env.VITE_BACKEND_URL;
+}
+
 export const generatePassword = async () => {
   const wordList = await axios
     .get("/wordlist.10000.gz", {
@@ -40,12 +48,12 @@ export const createFileHash = (file) => {
     reader.onload = async (event) => {
       try {
         const buffer = event.target.result;
-        const hashBuffer = await window.crypto.subtle.digest("SHA-1", buffer);
+        const hashBuffer = await window.crypto.subtle.digest("SHA-256", buffer);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray
+        const hexHash = hashArray
           .map((b) => b.toString(16).padStart(2, "0"))
           .join("");
-        resolve(hashHex);
+        resolve(hexHash);
       } catch (e) {
         reject(e);
       }
@@ -55,7 +63,15 @@ export const createFileHash = (file) => {
   });
 };
 
-export const encryptFile = async (file, password) => {
+const hexToBytes = (hex) => {
+  const bytes = [];
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes.push(parseInt(hex.substring(i, i + 2), 16));
+  }
+  return new Uint8Array(bytes);
+};
+
+export const encryptFile = async (file, password, hash) => {
   const encoder = new TextEncoder();
   const encodedPassword = encoder.encode(password);
   const passwordBuffer = encodedPassword.buffer;
@@ -67,12 +83,14 @@ export const encryptFile = async (file, password) => {
     ["encrypt", "decrypt"]
   );
 
+  const ivHex = hash.slice(0, 32);
+  let iv = hexToBytes(ivHex);
+
   let encodedFile = encoder.encode(file);
-  let iv = window.crypto.getRandomValues(new Uint8Array(16));
   let ciphertext = await window.crypto.subtle.encrypt(
     {
       name: "AES-CBC",
-      iv,
+      iv: iv,
     },
     key,
     encodedFile

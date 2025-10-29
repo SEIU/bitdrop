@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
+import { getBackendUrl } from "../../utils";
 import Uploader from "./Uploader";
 import {
   generatePassword,
@@ -10,6 +12,7 @@ import {
 import { Container, Box, Typography, TextField, Button } from "@mui/material";
 
 export default function Upload() {
+  const backendUrl = getBackendUrl();
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
@@ -23,13 +26,19 @@ export default function Upload() {
   const handleFileDrop = async (file) => {
     // make sure email is valid
     // setLoading
+    let fileName = file[0].path;
+    fileName = "foo.csv"; // TODO
     let token = createToken();
     let fileHash = await createFileHash(file[0]);
-    let res = await encryptFile(file[0], password);
-    console.log(res);
-
-    // encrypt content
-    // postFile
+    let encryptedFile = await encryptFile(file[0], password, fileHash);
+    let url = `${backendUrl}/api/upload/${token}/${fileHash}/${fileName}`;
+    console.log(url);
+    try {
+      const response = await axios.post(url, encryptedFile);
+      console.log("File posted successfully:", response.data);
+    } catch (error) {
+      console.error("Error posting file:", error);
+    }
     // unset loading
   };
 
