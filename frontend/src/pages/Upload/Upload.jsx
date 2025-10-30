@@ -19,8 +19,7 @@ export default function Upload() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const token = createToken();
-    console.log(token);
+    // stuff
   }, []);
 
   const handleFileDrop = async (file) => {

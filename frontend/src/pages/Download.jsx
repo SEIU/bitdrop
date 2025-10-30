@@ -21,7 +21,7 @@ export default function Download() {
       const response = await axios.get(url);
       console.log("File downloaded successfully:", response.data);
       let hash = response.data.raw_hash;
-      decryptFile(response.base64_content, password, hash);
+      decryptFile(response.data.base64_content, password, hash);
     } catch (error) {
       console.error("Error downloading file:", error);
     }

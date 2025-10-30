@@ -71,29 +71,92 @@ const hexToBytes = (hex) => {
   return new Uint8Array(bytes);
 };
 
-export const encryptFile = async (file, password, hash) => {
+/** Converts ArrayBuffer to Base64 string for storage/transmission. */
+const arrayBufferToBase64 = (buffer) => {
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+};
+
+/** Converts Base64 string back to ArrayBuffer for crypto operations. */
+const base64ToArrayBuffer = (base64) => {
+  const binary_string = atob(base64);
+  const len = binary_string.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binary_string.charCodeAt(i);
+  }
+  return bytes.buffer;
+};
+
+export const encryptFile = async (fileContent, password, hash) => {
+  // create initialization vector from hash
+  const ivHex = hash.slice(0, 32);
+  let iv = hexToBytes(ivHex);
+  // create key from password using iv as salt
+  const key = await deriveKeyFromPassword(password, iv);
+
   const encoder = new TextEncoder();
-  const encodedPassword = encoder.encode(password);
-  const passwordBuffer = encodedPassword.buffer;
-  let key = await crypto.subtle.importKey(
+  let encodedFile = encoder.encode(fileContent);
+
+  let ciphertextBuffer = await window.crypto.subtle.encrypt(
+    { name: "AES-CBC", iv: iv },
+    key,
+    encodedFile
+  );
+
+  const ciphertextBase64 = arrayBufferToBase64(ciphertextBuffer);
+  return ciphertextBase64;
+};
+
+export const decryptFile = async (base64_content, password, hash) => {
+  const ivHex = hash.slice(0, 32);
+  let iv = hexToBytes(ivHex);
+  const key = await deriveKeyFromPassword(password, iv);
+
+  let contentArrayBuffer = base64ToArrayBuffer(base64_content);
+  console.log(contentArrayBuffer);
+
+  // --- Decryption ---
+  try {
+    let decrypted = await window.crypto.subtle.decrypt(
+      { name: "AES-CBC", iv },
+      key,
+      contentArrayBuffer
+    );
+
+    let dec = new TextDecoder();
+    return dec.decode(decrypted);
+  } catch (error) {
+    console.error("Decryption Failed", error);
+    throw new Error("Decryption failed.");
+  }
+};
+
+async function deriveKeyFromPassword(password, salt) {
+  const passwordBytes = new TextEncoder().encode(password);
+  const passwordKey = await window.crypto.subtle.importKey(
     "raw",
-    passwordBuffer,
+    passwordBytes,
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+  const aesKey = await window.crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: salt,
+      iterations: 300000,
+      hash: "SHA-256",
+    },
+    passwordKey,
     { name: "AES-CBC", length: 256 },
     true,
     ["encrypt", "decrypt"]
   );
-
-  const ivHex = hash.slice(0, 32);
-  let iv = hexToBytes(ivHex);
-
-  let encodedFile = encoder.encode(file);
-  let ciphertext = await window.crypto.subtle.encrypt(
-    {
-      name: "AES-CBC",
-      iv: iv,
-    },
-    key,
-    encodedFile
-  );
-  return ciphertext;
-};
+  return aesKey;
+}
