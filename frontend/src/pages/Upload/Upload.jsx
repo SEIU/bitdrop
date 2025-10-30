@@ -15,8 +15,6 @@ import {
   Typography,
   TextField,
   Button,
-  List,
-  ListItem,
   CircularProgress,
 } from "@mui/material";
 
@@ -83,9 +81,10 @@ export default function Upload() {
           {postIsSuccessful ? (
             <>
               <Box>
+                <Typography>Success!</Typography>
                 <Typography>
-                  The download link was sent to your recipient. Don't forget to
-                  send them the password via a different channel.
+                  The download link was sent to {email}. Don't forget to send
+                  them the password via a different channel.
                 </Typography>
               </Box>
               <Box>
@@ -99,45 +98,19 @@ export default function Upload() {
           ) : (
             <>
               <Box>
-                <List>
-                  <ListItem>
-                    <Typography>
-                      1. Upload the file you want to share.
-                    </Typography>
-                  </ListItem>
-                  <ListItem>
-                    <Typography>
-                      2. Enter the email of the person you want to share the
-                      file with. An email with a link to download the file will
-                      be automatically be sent to them.
-                    </Typography>
-                  </ListItem>
-                  <ListItem>
-                    <Typography>
-                      3. Copy the password and share via a different channel,
-                      such as Slack, Signal, or text message.
-                    </Typography>
-                  </ListItem>
-                  <ListItem>
-                    <Typography>
-                      4. The person who receives the link will be able click on
-                      it, enter the password, and download the file.
-                    </Typography>
-                  </ListItem>
-                </List>
-                <Typography>
-                  Files will be deleted after 24 hours or at first download.
-                </Typography>
-              </Box>
-              <Box>
-                <Typography>File selected: {fileName}</Typography>
-                <Uploader handleFileDrop={handleFileDrop} />
-              </Box>
-              <Box>
                 <Box>
-                  <Typography>Password: {password}</Typography>
-
-                  <Typography>Email link to:</Typography>
+                  <Typography>1. Upload the file you want to share.</Typography>
+                  <Box>
+                    <Typography>File selected: {fileName}</Typography>
+                    <Uploader handleFileDrop={handleFileDrop} />
+                  </Box>
+                </Box>
+                <Box>
+                  <Typography>
+                    2. Enter the email of the person you want to share the file
+                    with. An email with a link to download the file will be
+                    automatically be sent to them.
+                  </Typography>
                   <TextField
                     type="email"
                     label="email"
@@ -145,8 +118,22 @@ export default function Upload() {
                     onChange={handleEmailChange}
                   />
                 </Box>
+                <Box>
+                  <Typography>
+                    3. Copy the password and share via a different channel, such
+                    as Slack, Signal, or text message. The person who receives
+                    the link will be able click on it, enter the password, and
+                    download the file.
+                  </Typography>
+                  <Typography>Password: {password}</Typography>
+                </Box>
+                <Typography>
+                  Files will be deleted after 24 hours or at first download.
+                </Typography>
               </Box>
-              <Button onClick={handlePost}>Submit</Button>
+              <Box>
+                <Button onClick={handlePost}>Submit</Button>
+              </Box>
             </>
           )}
         </>
