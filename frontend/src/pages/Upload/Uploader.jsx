@@ -1,6 +1,5 @@
-import { useState } from "react";
 import Dropzone from "react-dropzone";
-import { Box, Button, Typography, CircularProgress } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
 const dropZoneStyles = {

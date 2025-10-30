@@ -9,36 +9,52 @@ import {
   createFileHash,
   encryptFile,
 } from "../../utils";
-import { Container, Box, Typography, TextField, Button } from "@mui/material";
+import {
+  Container,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  List,
+  ListItem,
+  CircularProgress,
+} from "@mui/material";
 
 export default function Upload() {
   const backendUrl = getBackendUrl();
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
+  const [fileName, setFileName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [postIsSuccessful, setPostIsSuccessful] = useState(false);
 
   useEffect(() => {
-    // stuff
-  }, []);
+    console.log(email);
+  }, [email]);
 
   const handleFileDrop = async (file) => {
-    // make sure email is valid
-    // setLoading
-    let fileName = file[0].path;
-    fileName = "foo.csv"; // TODO
-    let token = createToken();
-    let fileHash = await createFileHash(file[0]);
-    let encryptedFile = await encryptFile(file[0], password, fileHash);
-    let url = `${backendUrl}/api/upload/${token}/${fileHash}/${fileName}`;
-    console.log(url);
+    setSelectedFile(file);
+    setFileName(file[0].path);
+  };
+
+  const handlePost = async () => {
+    setLoading(true);
+    let id = createToken();
+    let fileHash = await createFileHash(selectedFile[0]);
+    let encryptedFile = await encryptFile(selectedFile[0], password, fileHash);
+    let url = `${backendUrl}/api/upload/${id}/${fileHash}/${fileName}`;
     try {
+      // maybe send the email along?
       const response = await axios.post(url, encryptedFile);
       console.log("File posted successfully:", response.data);
+      setLoading(false);
+      setPostIsSuccessful(true);
     } catch (error) {
       console.error("Error posting file:", error);
+      setLoading(false);
+      // TODO show some messaging
     }
-    // unset loading
   };
 
   const handleEmailChange = (e) => {
@@ -49,35 +65,92 @@ export default function Upload() {
     setPassword(generatePassword());
   }, []);
 
+  const handleReset = () => {
+    setSelectedFile(null);
+    setPassword(generatePassword());
+    setEmail("");
+    setFileName("");
+    setLoading(false);
+    setPostIsSuccessful(false);
+  };
+
   return (
     <Container>
-      <Box>
-        <Typography>Instructions as needed</Typography>
-        <Typography>
-          Send password via a separate channel from the email address used!
-        </Typography>
-        <Typography>
-          Files will be deleted after 24 hours or at first download.
-        </Typography>
-      </Box>
-      <Box>
-        <Box>
-          <Typography>password: {password}</Typography>
-          <Typography>file selected:</Typography>
-          <Typography>email link to:</Typography>
-          <TextField
-            type="email"
-            label="email"
-            variant="standard"
-            onChange={handleEmailChange}
-          />
-          <Typography>deletion link</Typography>
-        </Box>
-      </Box>
+      {loading ? (
+        <CircularProgress />
+      ) : (
+        <>
+          {postIsSuccessful ? (
+            <>
+              <Box>
+                <Typography>
+                  The download link was sent to your recipient. Don't forget to
+                  send them the password via a different channel.
+                </Typography>
+              </Box>
+              <Box>
+                <Typography>Password: {password}</Typography>
+                <Typography>deletion link</Typography>
+              </Box>
+              <Box>
+                <Button onClick={handleReset}>Send Another File</Button>
+              </Box>
+            </>
+          ) : (
+            <>
+              <Box>
+                <List>
+                  <ListItem>
+                    <Typography>
+                      1. Upload the file you want to share.
+                    </Typography>
+                  </ListItem>
+                  <ListItem>
+                    <Typography>
+                      2. Enter the email of the person you want to share the
+                      file with. An email with a link to download the file will
+                      be automatically be sent to them.
+                    </Typography>
+                  </ListItem>
+                  <ListItem>
+                    <Typography>
+                      3. Copy the password and share via a different channel,
+                      such as Slack, Signal, or text message.
+                    </Typography>
+                  </ListItem>
+                  <ListItem>
+                    <Typography>
+                      4. The person who receives the link will be able click on
+                      it, enter the password, and download the file.
+                    </Typography>
+                  </ListItem>
+                </List>
+                <Typography>
+                  Files will be deleted after 24 hours or at first download.
+                </Typography>
+              </Box>
+              <Box>
+                <Typography>File selected: {fileName}</Typography>
+                <Uploader handleFileDrop={handleFileDrop} />
+              </Box>
+              <Box>
+                <Box>
+                  <Typography>Password: {password}</Typography>
 
-      <Box>
-        <Uploader handleFileDrop={handleFileDrop} />
-      </Box>
+                  <Typography>Email link to:</Typography>
+                  <TextField
+                    type="email"
+                    label="email"
+                    variant="outlined"
+                    onChange={handleEmailChange}
+                  />
+                </Box>
+              </Box>
+              <Button onClick={handlePost}>Submit</Button>
+            </>
+          )}
+        </>
+      )}
     </Container>
   );
 }
