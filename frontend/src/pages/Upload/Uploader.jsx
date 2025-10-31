@@ -11,7 +11,7 @@ const dropZoneStyles = {
   display: "flex",
   flexDirection: "column",
   justifyContent: "center",
-  marginBottom: "1.5rem",
+  margin: "10px",
 };
 
 export default function Uploader({ handleFileDrop }) {
@@ -27,7 +27,9 @@ export default function Uploader({ handleFileDrop }) {
             <Box {...getRootProps()}>
               <input {...getInputProps()} />
               <Box>
-                <CloudUploadIcon />
+                <CloudUploadIcon
+                  sx={{ fontSize: "3.5rem", color: "#8bb8e0" }}
+                />
                 <Typography>
                   Drag & drop a file here, or click to select a file
                 </Typography>

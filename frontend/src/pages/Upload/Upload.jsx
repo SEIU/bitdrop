@@ -18,6 +18,10 @@ import {
   CircularProgress,
 } from "@mui/material";
 
+const inputBoxStyles = {
+  marginBottom: "30px",
+};
+
 export default function Upload() {
   const backendUrl = getBackendUrl();
   const [password, setPassword] = useState("");
@@ -74,9 +78,18 @@ export default function Upload() {
   };
 
   return (
-    <Container>
+    <Container
+      sx={{
+        backgroundColor: "white",
+        marginTop: "50px",
+        borderRadius: "8px",
+        padding: "50px !important",
+      }}
+    >
       {loading ? (
-        <CircularProgress />
+        <Box>
+          <CircularProgress />
+        </Box>
       ) : (
         <>
           {postIsSuccessful ? (
@@ -99,14 +112,14 @@ export default function Upload() {
           ) : (
             <>
               <Box>
-                <Box>
+                <Box sx={inputBoxStyles}>
                   <Typography>1. Upload the file you want to share.</Typography>
                   <Box>
                     <Typography>File selected: {fileName}</Typography>
                     <Uploader handleFileDrop={handleFileDrop} />
                   </Box>
                 </Box>
-                <Box>
+                <Box sx={inputBoxStyles}>
                   <Typography>
                     2. Enter the email of the person you want to share the file
                     with. An email with a link to download the file will be
@@ -119,14 +132,23 @@ export default function Upload() {
                     onChange={handleEmailChange}
                   />
                 </Box>
-                <Box>
+                <Box sx={inputBoxStyles}>
                   <Typography>
                     3. Copy the password and share via a different channel, such
                     as Slack, Signal, or text message. The person who receives
                     the link will be able to click on it, enter the password,
                     and download the file.
                   </Typography>
-                  <Typography>Password: {password}</Typography>
+                  <Typography
+                    sx={{
+                      padding: "15px",
+                      border: "#8080805c 1px solid",
+                      borderRadius: "5px",
+                      width: "fit-content",
+                    }}
+                  >
+                    {password}
+                  </Typography>
                 </Box>
                 <Typography>
                   Files will be deleted after 24 hours or at first download.
