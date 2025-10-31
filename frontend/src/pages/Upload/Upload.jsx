@@ -25,11 +25,12 @@ export default function Upload() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileName, setFileName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [canSubmit, setCanSubmit] = useState(false);
   const [postIsSuccessful, setPostIsSuccessful] = useState(false);
 
   useEffect(() => {
-    console.log(email);
-  }, [email]);
+    setCanSubmit(selectedFile && isValidEmail(email));
+  }, [email, selectedFile]);
 
   const handleFileDrop = async (file) => {
     setSelectedFile(file);
@@ -113,7 +114,7 @@ export default function Upload() {
                   </Typography>
                   <TextField
                     type="email"
-                    label="email"
+                    label="Email (required)"
                     variant="outlined"
                     onChange={handleEmailChange}
                   />
@@ -132,7 +133,9 @@ export default function Upload() {
                 </Typography>
               </Box>
               <Box>
-                <Button onClick={handlePost}>Submit</Button>
+                <Button onClick={handlePost} disabled={!canSubmit}>
+                  Submit
+                </Button>
               </Box>
             </>
           )}
