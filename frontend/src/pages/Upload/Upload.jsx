@@ -122,8 +122,8 @@ export default function Upload() {
                   <Typography>
                     3. Copy the password and share via a different channel, such
                     as Slack, Signal, or text message. The person who receives
-                    the link will be able click on it, enter the password, and
-                    download the file.
+                    the link will be able to click on it, enter the password,
+                    and download the file.
                   </Typography>
                   <Typography>Password: {password}</Typography>
                 </Box>

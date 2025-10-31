@@ -71,8 +71,9 @@ const hexToBytes = (hex) => {
   return new Uint8Array(bytes);
 };
 
-/** Converts ArrayBuffer to Base64 string for storage/transmission. */
+// convert ArrayBuffer to Base64 string for storage/transmission
 const arrayBufferToBase64 = (buffer) => {
+  // create intermediate binary string
   let binary = "";
   const bytes = new Uint8Array(buffer);
   const len = bytes.byteLength;
@@ -82,7 +83,7 @@ const arrayBufferToBase64 = (buffer) => {
   return btoa(binary);
 };
 
-/** Converts Base64 string back to ArrayBuffer for crypto operations. */
+// convert Base64 string back to ArrayBuffer for crypto operations
 const base64ToArrayBuffer = (base64) => {
   const binary_string = atob(base64);
   const len = binary_string.length;
@@ -132,6 +133,7 @@ export const decryptFile = async (base64_content, password, hash) => {
     let dec = new TextDecoder();
     return dec.decode(decrypted);
   } catch (error) {
+    // TODO handle error messaging for user
     console.error("Decryption Failed", error);
     throw new Error("Decryption failed.");
   }
