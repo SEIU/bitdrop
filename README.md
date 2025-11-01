@@ -108,7 +108,7 @@ or when they have been successfully downloaded once.
 
 The fields "id" and "raw_hash" may be anything that a frontend chooses to use. The 
 backend does not validate the format of these. However, for the security of th
-protocol, we will use UUIds for "id" and "SHA-1" hashes for "raw_hash."¹
+protocol, we will use UUIDs for "id" and "SHA-1" hashes for "raw_hash."¹
 
 ## GET api/download/\<id\>
 
