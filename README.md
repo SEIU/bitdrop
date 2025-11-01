@@ -19,8 +19,7 @@ The interface of "new BitDrop" resembles the prevous implementation. In simple w
 
 ---
 
-When recipient clicks the URL,  e.g.
-[https://b.seiu.org/verify?id=kETG3DX0Hs](https://b.seiu.org/download?id=kETG3DX0Hs),
+When recipient clicks a URL like https://b.seiu.org/verify?id=913AEAB4-00E0,
 that was sent to them by email, they will see a screen similar to the old
 interface:
 
