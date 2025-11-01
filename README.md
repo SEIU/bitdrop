@@ -59,14 +59,15 @@ interface:
 In pseudo-code, the download screen will perform these actions:
 
 ```javascript
-const response = await fetch("https://api.b.seiu.org/download/38924387091");
+const response = await fetch(
+    "https://api.b.seiu.org/download/913AEAB4-00E0-40C6-86A4-A52EE87E6DD2");
 if (!response.ok) { ... handle missing file ... }
 
 const result = await response.json();
 const content = decrypt(atob(result.base64_content), password);
 const encoder = new TextEncoder();
 const data = encoder.encode(content);
-const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+const hashBuffer = await window.crypto.subtle.digest('SHA-1', data);
 
 // Convert the hash to a hex string
 const hashArray = Array.from(new Uint8Array(hashBuffer));
@@ -74,21 +75,40 @@ const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('
 if (hashHex !== result.raw_hash) { ... handle bad decryption ... }
 
 // ... Send the data to user
+
+// Delete the stored data after sending
 await fetch(
-    "https://api.b.seiu.org/download/38924387091/da39a3ee5e6b4b...",
+    "https://api.b.seiu.org/download/" +
+    "913AEAB4-00E0-40C6-86A4-A52EE87E6DD2/" +
+    "77e4d140d5636d103d797254143c498fbd057af8",
     { method: "DELETE" }
 );
 ```
 
 # Backend Routes
 
-## POST api/upload/\<id\>/\<raw\_hash\>/\<filename\>
+## POST api/upload/
 
-The post body is raw encrypted bytes. Content-type is application/octet-stream.
+The JSON body contains both metadata about the upload and the encrypted contents
+that will be stored by the backend.  A body will resemble:
+
+```json
+{
+    "send-to": "pii-recipient@example.org",
+    "id": "913AEAB4-00E0-40C6-86A4-A52EE87E6DD2",
+    "raw_hash": "77e4d140d5636d103d797254143c498fbd057af8",
+    "filename": "secret-membership-data.csv",
+    "base64_content": "aGVsbG8gd29ybGQK..."
+}
+```
 
 The backend server is responsible for storing the posted bytes associated with
 their id token. These bytes will be deleted after either 24 hours have passed
 or when they have been successfully downloaded once.
+
+The fields "id" and "raw_hash" may be anything that a frontend chooses to use. The 
+backend does not validate the format of these. However, for the security of th
+protocol, we will use UUIds for "id" and "SHA-1" hashes for "raw_hash."¹
 
 ## GET api/download/\<id\>
 
@@ -96,8 +116,8 @@ If the file exists, return a 200 status. The body will resemble:
 
 ```json
 {
-    "filename": "myfile.csv",
-    "raw_hash": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "filename": "secret-membership-data.csv",
+    "raw_hash": "77e4d140d5636d103d797254143c498fbd057af8",
     "base64_content": "aGVsbG8gd29ybGQK..."
 }
 ```
@@ -115,3 +135,15 @@ circumstance.
 
 If a file with the specified id and raw\_hash exists, a 200 is returned (and
 the file is deleted). If it does not exist, a 404 is returned.
+
+# Notes
+
+¹ We are aware of chosen-prefix and length-extension attacks on SHA-1. 
+We also know about the computational feasability of birthday-attack collisions
+on SHA-1 (in 2025 it takes about 1 GPU year to find a collision, but is well
+parallelizable).
+
+However, none of these have any relevance to the use we make of the hash.
+Even a hash as (intentionally) insecure as CRC32 would (almost) suffice since 
+the only purpose of the hash is detecting *accidental* collisions.  However, 
+CRC32 is small enough that even accidental collisions isn't outrageously unlikely.
