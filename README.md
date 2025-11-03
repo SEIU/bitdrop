@@ -93,7 +93,7 @@ that will be stored by the backend.  A body will resemble:
 
 ```json
 {
-    "send-to": "pii-recipient@example.org",
+    "email": "pii-recipient@example.org",
     "id": "913AEAB4-00E0-40C6-86A4-A52EE87E6DD2",
     "raw_hash": "77e4d140d5636d103d797254143c498fbd057af8",
     "filename": "secret-membership-data.csv",

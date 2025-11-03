@@ -5,6 +5,7 @@ description = "Secure and anonymous file sharing"
 readme = "README.md"
 requires-python = "==3.12.*"
 dependencies = [
+    "email-validator>=2.3.0",
     "fastapi[standard]",
     "gunicorn",
     "ipython",

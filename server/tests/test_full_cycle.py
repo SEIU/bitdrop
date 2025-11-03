@@ -1,8 +1,7 @@
-from base64 import b64encode
 from pathlib import Path
 import re
-import secrets
 from time import sleep
+import uuid
 
 import pytest
 
@@ -14,28 +13,32 @@ def setup():
     from app.main import app
 
     client = TestClient(app)
-    token = secrets.token_hex(10)
-    yield client, token
+    tokens = [uuid.uuid4() for _ in range(10)]  # Generate 10 unique tokens
+    yield client, tokens
 
 
 def test_upload_file(setup):
-    client, token = setup
-    response = client.post(
-        f"/api/upload/{token}-1/abcde12345/file.txt",
-        data=b"Hello World!",
-    )
+    client, tokens = setup
+    body = {
+        "email": "pii-recipient@example.org",
+        "id": str(tokens[1]),
+        "raw_hash": "77e4d140d5636d103d797254143c498fbd057af8",
+        "filename": "file.txt",
+        "base64_content": "aGVsbG8gd29ybGQK...",
+    }
+    response = client.post(f"/api/upload", json=body)
     assert response.status_code == 200
     data = response.json()
     assert data["filename"] == "file.txt"
-    assert data["id"] == f"{token}-1"
+    assert data["id"] == f"{tokens[1]}"
     assert re.match(r"^20\d{2}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$", data["timestamp"])
 
     new_file = (
         Path.home()
         / "uploads"
         / data["timestamp"]
-        / f"{token}-1"
-        / "abcde12345"
+        / str(tokens[1])
+        / body["raw_hash"]
         / "file.txt"
     )
     assert new_file.exists()
@@ -43,34 +46,48 @@ def test_upload_file(setup):
 
 def test_download_file(setup):
     sleep(1.5)  # Hack to get different timestamps for dirs
-    client, token = setup
-    response = client.post(
-        f"/api/upload/{token}-2/abcde12345/file.txt",
-        data=b"Adios",
-    )
-    response = client.get(f"/api/download/{token}-2")
+    client, tokens = setup
+    # Upload test content
+    body = {
+        "email": "pii-recipient@example.org",
+        "id": str(tokens[2]),
+        "raw_hash": "77e4d140d5636d103d797254143c498fbd057af8",
+        "filename": "file.txt",
+        "base64_content": "aGVsbG8gd29ybGQK...",
+    }
+    client.post(f"/api/upload", json=body)
+
+    # Verify downloaded content
+    response = client.get(f"/api/download/{tokens[2]}")
     assert response.status_code == 200
     data = response.json()
     assert data["filename"] == "file.txt"
-    assert data["raw_hash"] == "abcde12345"
-    assert b64encode(data["base64_content"].encode()) == b"UVdScGIzTT0="
-
-    new_file = next((Path.home() / "uploads").glob(f"*/{token}-2/*/file.txt"))
+    assert data["raw_hash"] == body["raw_hash"]
+    assert data["base64_content"] == "aGVsbG8gd29ybGQK..."
+    new_file = next((Path.home() / "uploads").glob(f"*/{tokens[2]}/*/file.txt"))
     assert new_file.exists()
 
 
 @pytest.mark.dependency(depends_on=["test_upload_file", "test_download_file"])
 def test_delete_file(setup):
     sleep(3)  # Hack to get different timestamps for dirs
-    client, token = setup
-    response = client.post(
-        f"/api/upload/{token}-3/abcde/file.txt",
-        data=b"Hello World!",
-    )
-    response = client.delete(f"/api/download/{token}-3/abcde")
+    client, tokens = setup
+    # Upload test content
+    body = {
+        "email": "pii-recipient@example.org",
+        "id": str(tokens[3]),
+        "raw_hash": "77e4d140d5636d103d797254143c498fbd057af8",
+        "filename": "file.txt",
+        "base64_content": "aGVsbG8gd29ybGQK...",
+    }
+    client.post(f"/api/upload", json=body)
+
+    # Delete uploaded file
+    response = client.delete(f"/api/download/{tokens[3]}/{body['raw_hash']}")
     assert response.status_code == 200
     data = response.json()
-    assert data["message"] == f"File with ID {token}-3 and hash abcde deleted"
+    assert data["message"] == f"File with ID {tokens[3]} and hash {body['raw_hash']} deleted"
 
-    new_file = list((Path.home() / "uploads").glob(f"*/{token}-3/*/file.txt"))
-    assert new_file == [] # No such path exists
+    # Check that file is deleted
+    new_file = list((Path.home() / "uploads").glob(f"*/{tokens[3]}/*/file.txt"))
+    assert new_file == []  # No such path exists

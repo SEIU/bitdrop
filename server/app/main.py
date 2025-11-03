@@ -1,11 +1,12 @@
-import base64
 from datetime import datetime
 from pathlib import Path
 import shutil
+import uuid
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel, EmailStr
 
 app = FastAPI()
 app.add_middleware(
@@ -16,9 +17,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-async def parse_body(request: Request):
-    data: bytes = await request.body()
-    return data
+
+class Upload(BaseModel):
+    email: EmailStr
+    id: uuid.UUID
+    raw_hash: str
+    filename: str
+    base64_content: str
 
 
 @app.get("/")
@@ -27,21 +32,20 @@ async def root() -> str:
     return "Welcome to SEIU BitDrop!"
 
 
-@app.post("/api/upload/{id}/{raw_hash}/{filename}")
+@app.post("/api/upload/")
 async def upload_file(
-    id: str,
-    raw_hash: str,
-    filename: str,
-    file: bytes = Depends(parse_body),
+    body: Upload,
 ) -> JSONResponse:
     "Store raw bytes of an uploaded file"
     ts = datetime.now().isoformat(timespec="seconds")
-    fname = Path.home() / f"uploads" / ts / id / raw_hash / filename
+    fname = Path.home() / f"uploads" / ts / str(body.id) / body.raw_hash / body.filename
     fname.parent.mkdir(parents=True, exist_ok=True)
-    with open(fname, "wb") as f:
-        f.write(file)
+    with open(fname, "w") as f:
+        f.write(body.base64_content)
 
-    return JSONResponse(content={"id": id, "filename": filename, "timestamp": ts})
+    return JSONResponse(
+        content={"id": str(body.id), "filename": body.filename, "timestamp": ts}
+    )
 
 
 @app.get("/api/download/{id}")
@@ -61,7 +65,7 @@ def download_file(id: str) -> JSONResponse:
     else:
         file = matches[0]
         *_, raw_hash, filename = file.parts
-        base64_content = base64.b64encode(file.read_bytes()).decode()
+        base64_content = file.read_text()
         return JSONResponse(
             content={
                 "filename": f"{filename}",
