@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { getBackendUrl } from "../../utils";
 import Uploader from "./Uploader";
+import PasswordField from "../../components/PasswordField";
 import {
   generatePassword,
   isValidEmail,
@@ -19,7 +20,7 @@ import {
 } from "@mui/material";
 
 const inputBoxStyles = {
-  marginBottom: "30px",
+  marginTop: "30px",
 };
 
 export default function Upload() {
@@ -76,8 +77,13 @@ export default function Upload() {
   };
 
   useEffect(() => {
-    setPassword(generatePassword());
+    getPassword();
   }, []);
+
+  const getPassword = async () => {
+    const pw = await generatePassword();
+    setPassword(pw);
+  };
 
   const handleReset = () => {
     setSelectedFile(null);
@@ -112,8 +118,8 @@ export default function Upload() {
                   them the password via a different channel.
                 </Typography>
               </Box>
+              <PasswordField password={password} />
               <Box>
-                <Typography>Password: {password}</Typography>
                 <Typography>deletion link</Typography>
               </Box>
               <Box>
@@ -150,20 +156,13 @@ export default function Upload() {
                     the link will be able to click on it, enter the password,
                     and download the file.
                   </Typography>
-                  <Typography
-                    sx={{
-                      padding: "15px",
-                      border: "#8080805c 1px solid",
-                      borderRadius: "5px",
-                      width: "fit-content",
-                    }}
-                  >
-                    {password}
+                </Box>
+                <PasswordField password={password} />
+                <Box sx={inputBoxStyles}>
+                  <Typography>
+                    Files will be deleted after 24 hours or at first download.
                   </Typography>
                 </Box>
-                <Typography>
-                  Files will be deleted after 24 hours or at first download.
-                </Typography>
               </Box>
               <Box>
                 <Button onClick={handlePost} disabled={!canSubmit}>
