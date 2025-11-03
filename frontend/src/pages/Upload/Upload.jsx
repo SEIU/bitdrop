@@ -7,7 +7,7 @@ import {
   isValidEmail,
   createToken,
   createFileHash,
-  encryptFile,
+  processAndEncryptFile,
 } from "../../utils";
 import {
   Container,
@@ -46,7 +46,11 @@ export default function Upload() {
 
     let id = createToken();
     let fileHash = await createFileHash(selectedFile[0]);
-    let encryptedFile = await encryptFile(selectedFile[0], password, fileHash);
+    let encryptedFile = await processAndEncryptFile(
+      selectedFile[0],
+      password,
+      fileHash
+    );
     let url = `${backendUrl}/api/upload/`;
     let body = {
       "send-to": email,

@@ -94,22 +94,40 @@ const base64ToArrayBuffer = (base64) => {
   return bytes.buffer;
 };
 
-export const encryptFile = async (fileContent, password, hash) => {
+const readFileAsArrayBuffer = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      resolve(event.target.result);
+    };
+
+    reader.onerror = (error) => {
+      reject(error);
+    };
+
+    reader.readAsArrayBuffer(file);
+  });
+};
+
+export const processAndEncryptFile = async (file, password, hash) => {
+  const fileContentBuffer = await readFileAsArrayBuffer(file);
+  const ciphertextBase64 = await encryptFile(fileContentBuffer, password, hash);
+  return ciphertextBase64;
+};
+
+export const encryptFile = async (fileContentBuffer, password, hash) => {
   // create initialization vector from hash
   const ivHex = hash.slice(0, 32);
   let iv = hexToBytes(ivHex);
   // create key from password using iv as salt
   const key = await deriveKeyFromPassword(password, iv);
 
-  const encoder = new TextEncoder();
-  let encodedFile = encoder.encode(fileContent);
-
   let ciphertextBuffer = await window.crypto.subtle.encrypt(
     { name: "AES-CBC", iv: iv },
     key,
-    encodedFile
+    fileContentBuffer
   );
-
   const ciphertextBase64 = arrayBufferToBase64(ciphertextBuffer);
   return ciphertextBase64;
 };
