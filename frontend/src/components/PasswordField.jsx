@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Box, Typography } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 const passwordBoxStyles = {
   padding: "15px",
@@ -9,10 +11,13 @@ const passwordBoxStyles = {
 };
 
 export default function PasswordField({ password }) {
+  const [copied, setCopied] = useState(false);
+
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(password);
-      alert(`${password} copied to clipboard`);
+      console.log("copied: ", password);
+      setCopied(true);
     } catch (err) {
       console.error("Failed to copy text: ", err);
     }
@@ -21,11 +26,15 @@ export default function PasswordField({ password }) {
   return (
     <Box sx={{ display: "flex", alignItems: "center" }}>
       <Typography sx={passwordBoxStyles}>{password}</Typography>
-      <ContentCopyIcon
-        color="primary"
-        sx={{ marginLeft: "10px", cursor: "pointer" }}
-        onClick={copyToClipboard}
-      />
+      {copied ? (
+        <CheckCircleIcon sx={{ marginLeft: "10px", color: "#11b917" }} />
+      ) : (
+        <ContentCopyIcon
+          color="primary"
+          sx={{ marginLeft: "10px", cursor: "pointer" }}
+          onClick={copyToClipboard}
+        />
+      )}
     </Box>
   );
 }
