@@ -3,6 +3,7 @@ import axios from "axios";
 import { getBackendUrl } from "../../utils";
 import Uploader from "./Uploader";
 import PasswordField from "../../components/PasswordField";
+import { containerStyles } from "../../components/sharedStyles";
 import {
   generatePassword,
   isValidEmail,
@@ -95,14 +96,7 @@ export default function Upload() {
   };
 
   return (
-    <Container
-      sx={{
-        backgroundColor: "white",
-        marginTop: "50px",
-        borderRadius: "8px",
-        padding: "50px !important",
-      }}
-    >
+    <Container sx={containerStyles}>
       {loading ? (
         <Box>
           <CircularProgress />

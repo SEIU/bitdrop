@@ -138,7 +138,6 @@ export const decryptFile = async (base64_content, password, hash) => {
   const key = await deriveKeyFromPassword(password, iv);
 
   let contentArrayBuffer = base64ToArrayBuffer(base64_content);
-  console.log(contentArrayBuffer);
 
   // --- Decryption ---
   try {

@@ -3,7 +3,8 @@ import axios from "axios";
 import { useSearchParams } from "react-router";
 import { getBackendUrl } from "../utils";
 import { decryptFile } from "../utils";
-import { Button, TextField, Typography } from "@mui/material";
+import { Button, TextField, Typography, Container, Box } from "@mui/material";
+import { containerStyles } from "../components/sharedStyles";
 
 export default function Download() {
   const backendUrl = getBackendUrl();
@@ -28,14 +29,18 @@ export default function Download() {
   };
 
   return (
-    <>
-      <Typography>Password: </Typography>
-      <TextField
-        value={password}
-        variant="outlined"
-        onChange={handleChangePassword}
-      />
-      <Button onClick={handleDownload}>Download</Button>
-    </>
+    <Container sx={containerStyles}>
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Typography sx={{ marginRight: "10px" }}>Password: </Typography>
+        <TextField
+          value={password}
+          variant="outlined"
+          onChange={handleChangePassword}
+        />
+        <Button sx={{ marginLeft: "20px" }} onClick={handleDownload}>
+          Download
+        </Button>
+      </Box>
+    </Container>
   );
 }
