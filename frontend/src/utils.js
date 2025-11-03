@@ -147,8 +147,10 @@ export const decryptFile = async (base64_content, password, hash) => {
       contentArrayBuffer
     );
 
-    let dec = new TextDecoder();
-    return dec.decode(decrypted);
+    const plaintextBlob = new Blob([decrypted], {
+      type: "application/octet-stream",
+    });
+    return plaintextBlob;
   } catch (error) {
     // TODO handle error messaging for user
     console.error("Decryption Failed", error);

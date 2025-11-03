@@ -14,18 +14,35 @@ export default function Download() {
     setPassword(e.target.value);
   };
 
+  // TODO handle file deletion
+
   const handleDownload = async () => {
     let id = searchParams.get("id");
     let url = `${backendUrl}/api/download/${id}`;
 
     try {
       const response = await axios.get(url);
-      console.log("File downloaded successfully:", response.data);
       let hash = response.data.raw_hash;
-      decryptFile(response.data.base64_content, password, hash);
+      let plainTextBlob = await decryptFile(
+        response.data.base64_content,
+        password,
+        hash
+      );
+      downloadBlob(plainTextBlob, response.data.filename);
     } catch (error) {
       console.error("Error downloading file:", error);
     }
+  };
+
+  const downloadBlob = (blob, filename) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
