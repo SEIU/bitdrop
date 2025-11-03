@@ -7,7 +7,7 @@ import {
   isValidEmail,
   createToken,
   createFileHash,
-  encryptFile,
+  processAndEncryptFile,
 } from "../../utils";
 import {
   Container,
@@ -43,13 +43,24 @@ export default function Upload() {
 
   const handlePost = async () => {
     setLoading(true);
+
     let id = createToken();
     let fileHash = await createFileHash(selectedFile[0]);
-    let encryptedFile = await encryptFile(selectedFile[0], password, fileHash);
-    let url = `${backendUrl}/api/upload/${id}/${fileHash}/${fileName}`;
+    let encryptedFile = await processAndEncryptFile(
+      selectedFile[0],
+      password,
+      fileHash
+    );
+    let url = `${backendUrl}/api/upload/`;
+    let body = {
+      "send-to": email,
+      id: id,
+      raw_hash: fileHash,
+      filename: fileName,
+      base64_content: encryptedFile,
+    };
     try {
-      // maybe send the email along?
-      const response = await axios.post(url, encryptedFile);
+      const response = await axios.post(url, body);
       console.log("File posted successfully:", response.data);
       setLoading(false);
       setPostIsSuccessful(true);
