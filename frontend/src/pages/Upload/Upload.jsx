@@ -22,7 +22,7 @@ import {
 } from "@mui/material";
 
 const inputBoxStyles = {
-  marginTop: "30px",
+  marginBottom: "30px",
 };
 
 export default function Upload() {

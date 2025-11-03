@@ -12,7 +12,6 @@ export default function Download() {
   const [password, setPassword] = useState("");
   const [downloadDisabled, setDownloadDisabled] = useState(true);
 
-  // TODO handle file deletion
   // TODO handle failure to decrypt/download
 
   useEffect(() => {
@@ -28,16 +27,18 @@ export default function Download() {
   const handleDownload = async () => {
     let id = searchParams.get("id");
     let url = `${backendUrl}/api/download/${id}`;
+    let hash;
 
     try {
       const response = await axios.get(url);
-      let hash = response.data.raw_hash;
+      hash = response.data.raw_hash;
       let plainTextBlob = await decryptFile(
         response.data.base64_content,
         password,
-        hash
+        response.data.raw_hash
       );
       downloadBlob(plainTextBlob, response.data.filename);
+      await deleteFile(id, hash);
     } catch (error) {
       console.error("Error downloading file:", error);
     }
@@ -54,6 +55,16 @@ export default function Download() {
     URL.revokeObjectURL(url);
   };
 
+  const deleteFile = async (id, hash) => {
+    let url = `${backendUrl}/api/download/${id}/${hash}`;
+    try {
+      const response = await axios.delete(url);
+      console.log("delete yes, ", response);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+    }
+  };
+
   return (
     <Container sx={containerStyles}>
       <Box
@@ -62,8 +73,8 @@ export default function Download() {
         <Box sx={{ textAlign: "center", marginBottom: "20px" }}>
           <Typography>Enter the password to download the file.</Typography>
           <Typography>
-            The file can only be download once and will be automatically deleted
-            from the cloud after download.
+            The file can only be downloaded once and will be automatically
+            deleted from the cloud after download.
           </Typography>
         </Box>
 
