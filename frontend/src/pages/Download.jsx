@@ -47,14 +47,21 @@ export default function Download() {
 
   return (
     <Container sx={containerStyles}>
-      <Box sx={{ display: "flex", alignItems: "center" }}>
-        <Typography sx={{ marginRight: "10px" }}>Password: </Typography>
-        <TextField
-          value={password}
-          variant="outlined"
-          onChange={handleChangePassword}
-        />
-        <Button sx={{ marginLeft: "20px" }} onClick={handleDownload}>
+      <Box
+        sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Typography sx={{ marginRight: "10px" }}>Password: </Typography>
+          <TextField
+            value={password}
+            variant="outlined"
+            onChange={handleChangePassword}
+          />
+        </Box>
+        <Button
+          sx={{ marginTop: "20px", width: "200px" }}
+          onClick={handleDownload}
+        >
           Download
         </Button>
       </Box>
