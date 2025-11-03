@@ -54,7 +54,7 @@ export default function Upload() {
     );
     let url = `${backendUrl}/api/upload/`;
     let body = {
-      "send-to": email,
+      email: email,
       id: id,
       raw_hash: fileHash,
       filename: fileName,
