@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useSearchParams } from "react-router";
 import { getBackendUrl } from "../utils";
@@ -10,11 +10,20 @@ export default function Download() {
   const backendUrl = getBackendUrl();
   const [searchParams, setSearchParams] = useSearchParams();
   const [password, setPassword] = useState("");
+  const [downloadDisabled, setDownloadDisabled] = useState(true);
+
+  // TODO handle file deletion
+  // TODO handle failure to decrypt/download
+
+  useEffect(() => {
+    if (password !== "") {
+      setDownloadDisabled(false);
+    }
+  }, [password]);
+
   const handleChangePassword = (e) => {
     setPassword(e.target.value);
   };
-
-  // TODO handle file deletion
 
   const handleDownload = async () => {
     let id = searchParams.get("id");
@@ -50,6 +59,14 @@ export default function Download() {
       <Box
         sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
       >
+        <Box sx={{ textAlign: "center", marginBottom: "20px" }}>
+          <Typography>Enter the password to download the file.</Typography>
+          <Typography>
+            The file can only be download once and will be automatically deleted
+            from the cloud after download.
+          </Typography>
+        </Box>
+
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <Typography sx={{ marginRight: "10px" }}>Password: </Typography>
           <TextField
@@ -58,9 +75,11 @@ export default function Download() {
             onChange={handleChangePassword}
           />
         </Box>
+
         <Button
           sx={{ marginTop: "20px", width: "200px" }}
           onClick={handleDownload}
+          disabled={downloadDisabled}
         >
           Download
         </Button>
