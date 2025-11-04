@@ -18,7 +18,7 @@ import {
   Typography,
   TextField,
   Button,
-  CircularProgress,
+  LinearProgress,
 } from "@mui/material";
 
 const inputBoxStyles = {
@@ -30,7 +30,7 @@ export default function Upload() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-  const [fileName, setFileName] = useState("");
+  const [fileName, setFileName] = useState(null);
   const [loading, setLoading] = useState(false);
   const [canSubmit, setCanSubmit] = useState(false);
   const [postIsSuccessful, setPostIsSuccessful] = useState(false);
@@ -74,6 +74,7 @@ export default function Upload() {
       console.error("Error posting file:", error);
       setLoading(false);
       // TODO show some messaging
+      // setPostIsSuccessful(true); // XXX UNHACK THIS
     }
   };
 
@@ -94,7 +95,7 @@ export default function Upload() {
     setSelectedFile(null);
     setPassword(generatePassword());
     setEmail("");
-    setFileName("");
+    setFileName(null);
     setLoading(false);
     setPostIsSuccessful(false);
   };
@@ -105,72 +106,70 @@ export default function Upload() {
 
   return (
     <Container sx={containerStyles}>
-      {loading ? (
-        <Box sx={{ textAlign: "center" }}>
-          <CircularProgress />
+      {loading && <LinearProgress />}
+      <Box>
+        <Box sx={inputBoxStyles}>
+          <Typography>Upload the file you want to share.</Typography>
+          <Box>
+            <Uploader
+              handleFileDrop={handleFileDrop}
+              isDisabled={postIsSuccessful}
+              fileName={fileName}
+            />
+          </Box>
         </Box>
-      ) : (
+        <Box sx={inputBoxStyles}>
+          <Typography>
+            Enter the email of the person you want to share the file with. An
+            email with a link to download the file will be automatically be sent
+            to them.
+          </Typography>
+          <TextField
+            type="email"
+            value={email}
+            label="Email (required)"
+            variant="outlined"
+            disabled={postIsSuccessful}
+            onChange={handleEmailChange}
+          />
+        </Box>
+        <Box sx={inputBoxStyles}>
+          <Typography>
+            Files will be deleted after 24 hours or at first download.
+          </Typography>
+        </Box>
+      </Box>
+      {!postIsSuccessful && (
+        <Box>
+          <Button onClick={handlePost} disabled={!canSubmit}>
+            Submit
+          </Button>
+        </Box>
+      )}
+
+      {postIsSuccessful && (
         <>
-          {postIsSuccessful ? (
-            <>
-              <Box>
-                <Box sx={{ marginBottom: "10px" }}>
-                  <Typography>Success!</Typography>
-                  <Typography>
-                    The download link was sent to {email}. Copy the password and
-                    share via a different channel, such as Slack, Signal, or
-                    text message. The person who receives the link will be able
-                    to click on it, enter the password, and download the file.
-                  </Typography>
-                </Box>
+          <Box>
+            <Box sx={{ marginBottom: "10px" }}>
+              <Typography>Success!</Typography>
+              <Typography>
+                The download link was sent to <b>{email}</b>. Copy the password
+                and share via a different channel, such as Slack, Signal, or
+                text message. The person who receives the link will be able to
+                click on it, enter the password, and download the file.
+              </Typography>
+            </Box>
 
-                <PasswordField password={password} />
+            <PasswordField password={password} />
 
-                <Button sx={{ marginTop: "20px" }} onClick={handleReset}>
-                  Send Another File
-                </Button>
-              </Box>
-              <Box>
-                {/* FOR DEVELOPMENT ONLY */}
-                <Button onClick={goToDownload}>Verify Download (devs)</Button>
-              </Box>
-            </>
-          ) : (
-            <>
-              <Box>
-                <Box sx={inputBoxStyles}>
-                  <Typography>1. Upload the file you want to share.</Typography>
-                  <Box>
-                    <Typography>File selected: {fileName}</Typography>
-                    <Uploader handleFileDrop={handleFileDrop} />
-                  </Box>
-                </Box>
-                <Box sx={inputBoxStyles}>
-                  <Typography>
-                    2. Enter the email of the person you want to share the file
-                    with. An email with a link to download the file will be
-                    automatically be sent to them.
-                  </Typography>
-                  <TextField
-                    type="email"
-                    label="Email (required)"
-                    variant="outlined"
-                    onChange={handleEmailChange}
-                  />
-                </Box>
-                <Box sx={inputBoxStyles}>
-                  <Typography>
-                    Files will be deleted after 24 hours or at first download.
-                  </Typography>
-                </Box>
-              </Box>
-              <Box>
-                <Button onClick={handlePost} disabled={!canSubmit}>
-                  Submit
-                </Button>
-              </Box>
-            </>
-          )}
+            <Button sx={{ marginTop: "20px" }} onClick={handleReset}>
+              Send Another File
+            </Button>
+          </Box>
+          <Box>
+            {/* FOR DEVELOPMENT ONLY */}
+            <Button onClick={goToDownload}>Verify Download (devs)</Button>
+          </Box>
         </>
       )}
     </Container>
