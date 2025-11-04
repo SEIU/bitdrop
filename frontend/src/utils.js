@@ -6,7 +6,7 @@ export function getBackendUrl() {
   if (window.location.hostname === "localhost") {
     return developmentUrl;
   }
-  return import.meta.env.VITE_BACKEND_URL;
+  return "";
 }
 
 export const generatePassword = async () => {
