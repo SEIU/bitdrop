@@ -37,7 +37,7 @@ async def root() -> str:
     return "Welcome to SEIU BitDrop!"
 
 
-@app.post("/api/upload/")
+@app.post("/upload/")
 async def upload_file(
     body: Upload,
 ) -> JSONResponse:
@@ -80,7 +80,7 @@ async def upload_file(
     )
 
 
-@app.get("/api/download/{id}")
+@app.get("/download/{id}")
 def download_file(id: str) -> JSONResponse:
     "Download a file by its ID token"
     uploads_dir = Path.home() / "uploads"
@@ -107,7 +107,7 @@ def download_file(id: str) -> JSONResponse:
         )
 
 
-@app.delete("/api/download/{id}/{raw_hash}")
+@app.delete("/download/{id}/{raw_hash}")
 def delete_file(id: str, raw_hash: str) -> JSONResponse:
     "Delete a file by its ID and raw hash"
     uploads_dir = Path.home() / "uploads"

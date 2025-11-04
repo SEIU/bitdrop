@@ -27,7 +27,7 @@ def test_upload_file(setup):
         "base64_content": "aGVsbG8gd29ybGQK...",
         "unit_test": True,
     }
-    response = client.post(f"/api/upload", json=body)
+    response = client.post(f"/upload", json=body)
     assert response.status_code == 200
     data = response.json()
     assert data["filename"] == "file.txt"
@@ -56,10 +56,10 @@ def test_download_file(setup):
         "filename": "file.txt",
         "base64_content": "aGVsbG8gd29ybGQK...",
     }
-    client.post(f"/api/upload", json=body)
+    client.post(f"/upload", json=body)
 
     # Verify downloaded content
-    response = client.get(f"/api/download/{tokens[2]}")
+    response = client.get(f"/download/{tokens[2]}")
     assert response.status_code == 200
     data = response.json()
     assert data["filename"] == "file.txt"
@@ -81,10 +81,10 @@ def test_delete_file(setup):
         "filename": "file.txt",
         "base64_content": "aGVsbG8gd29ybGQK...",
     }
-    client.post(f"/api/upload", json=body)
+    client.post(f"/upload", json=body)
 
     # Delete uploaded file
-    response = client.delete(f"/api/download/{tokens[3]}/{body['raw_hash']}")
+    response = client.delete(f"/download/{tokens[3]}/{body['raw_hash']}")
     assert response.status_code == 200
     data = response.json()
     assert data["message"] == f"File with ID {tokens[3]} and hash {body['raw_hash']} deleted"
