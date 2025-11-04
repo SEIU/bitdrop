@@ -11,13 +11,10 @@ export function getBackendUrl() {
 
 export const generatePassword = async () => {
   const wordList = await axios
-    .get("/wordlist.10000.gz", {
-      responseType: "arraybuffer",
-    })
+    .get("/wordlist.txt")
     .then((response) => {
-      const decoder = new TextDecoder("utf-8");
-      const decompressedData = decoder.decode(response.data);
-      const words = decompressedData.trim().split("\n");
+      const textData = response.data;
+      const words = textData.trim().split("\n");
       return words;
     })
     .catch((error) =>
