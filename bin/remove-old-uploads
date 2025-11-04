@@ -1,0 +1,6 @@
+#!/bin/bash
+OLD=$(date -d "1 day ago" --iso-8601=seconds)
+for dirname in $HOME/uploads/*; do
+    echo "$dirname $OLD"
+    if [ "$(basename $dirname)" \< "$OLD" ]; then rm -rf "$dirname"; fi
+done
