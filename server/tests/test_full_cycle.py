@@ -25,6 +25,7 @@ def test_upload_file(setup):
         "raw_hash": "77e4d140d5636d103d797254143c498fbd057af8",
         "filename": "file.txt",
         "base64_content": "aGVsbG8gd29ybGQK...",
+        "unit_test": True,
     }
     response = client.post(f"/api/upload", json=body)
     assert response.status_code == 200

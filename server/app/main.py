@@ -3,10 +3,13 @@ from pathlib import Path
 import shutil
 import uuid
 
+import boto3
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
+
+bitdrop = "https://b2.seiu.org"
 
 app = FastAPI()
 app.add_middleware(
@@ -24,6 +27,8 @@ class Upload(BaseModel):
     raw_hash: str
     filename: str
     base64_content: str
+    message: str = "Someone has shared a file with you on SEIU BitDrop!"
+    unit_test: bool = False
 
 
 @app.get("/")
@@ -36,15 +41,42 @@ async def root() -> str:
 async def upload_file(
     body: Upload,
 ) -> JSONResponse:
-    "Store raw bytes of an uploaded file"
+    "Store the uploaded base64 string and send an email"
+
+    # Store the data
     ts = datetime.now().isoformat(timespec="seconds")
     fname = Path.home() / f"uploads" / ts / str(body.id) / body.raw_hash / body.filename
     fname.parent.mkdir(parents=True, exist_ok=True)
     with open(fname, "w") as f:
         f.write(body.base64_content)
 
+    # Send the email
+    response = None  # Re-bound when sending email
+    if not body.unit_test:
+        ses_client = boto3.client("ses", region_name="us-west-2")
+        email_body = f"{body.message}\n\nDownload from {bitdrop}/verify?id={body.id}"
+        msg = {
+            "Source": "bitdrop@mail.dsa.seiu.org",
+            "Destination": {"ToAddresses": [body.email]},
+            "Message": {
+                "Subject": {"Data": "A file was shared with you on SEIU BitDrop!"},
+                "Body": {"Text": {"Data": email_body}},
+            },
+        }
+        try:
+            response = ses_client.send_email(**msg)
+        except Exception as e:
+            return JSONResponse(
+                content={"message": f"Failed to send email: {str(e)}"}, status_code=500
+            )
+
     return JSONResponse(
-        content={"id": str(body.id), "filename": body.filename, "timestamp": ts}
+        content={
+            "id": str(body.id),
+            "filename": body.filename,
+            "timestamp": ts,
+            "MessageId": None if not response else response.get("MessageId"),
+        }
     )
 
 
