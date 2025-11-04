@@ -106,7 +106,7 @@ export default function Upload() {
   return (
     <Container sx={containerStyles}>
       {loading ? (
-        <Box>
+        <Box sx={{ textAlign: "center" }}>
           <CircularProgress />
         </Box>
       ) : (
