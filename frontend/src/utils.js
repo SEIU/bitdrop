@@ -6,6 +6,7 @@ export function getBackendUrl() {
   if (window.location.hostname === "localhost") {
     return developmentUrl;
   }
+  return "https://api.b2.seiu.org/";
   return "https://127.0.0.1:8443";
 }
 
