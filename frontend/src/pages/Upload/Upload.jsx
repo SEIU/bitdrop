@@ -57,7 +57,7 @@ export default function Upload() {
       password,
       fileHash
     );
-    let url = `${backendUrl}/api/upload/`;
+    let url = `${backendUrl}/upload/`;
     let body = {
       email: email,
       id: id,

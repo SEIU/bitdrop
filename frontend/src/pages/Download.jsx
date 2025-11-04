@@ -26,7 +26,7 @@ export default function Download() {
 
   const handleDownload = async () => {
     let id = searchParams.get("id");
-    let url = `${backendUrl}/api/download/${id}`;
+    let url = `${backendUrl}/download/${id}`;
     let hash;
 
     try {
