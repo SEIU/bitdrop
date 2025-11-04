@@ -1,7 +1,7 @@
 import Dropzone from "react-dropzone";
 import { Box, Typography } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 
 const dropZoneStyles = {
   border: "2px dashed #cccccc",
@@ -15,12 +15,22 @@ const dropZoneStyles = {
   margin: "10px",
 };
 
-export default function Uploader({ handleFileDrop, isDisabled }) {
+export default function Uploader({ handleFileDrop, isDisabled, reset }) {
+  const [fileName, setFileName] = useState(null);
+  const [uploaderText, setUploaderText] = useState(
+    "Drag & drop a file here, or click to select a file"
+  );
+
   useEffect(() => {
-    console.log("dropzone is disabled: ", isDisabled);
-  });
+    if (fileName) {
+      setUploaderText("Drag & drop or click to replace the selected file");
+    } else {
+      ("Drag & drop a file here, or click to select a file");
+    }
+  }, [fileName]);
 
   const onDrop = (selectedFile) => {
+    setFileName(selectedFile[0].path);
     handleFileDrop(selectedFile);
   };
 
@@ -32,12 +42,15 @@ export default function Uploader({ handleFileDrop, isDisabled }) {
             <Box {...getRootProps()}>
               <input {...getInputProps()} />
               <Box>
-                <CloudUploadIcon
-                  sx={{ fontSize: "3.5rem", color: "#8bb8e0" }}
-                />
-                <Typography>
-                  Drag & drop a file here, or click to select a file
-                </Typography>
+                <Typography>{fileName}</Typography>
+                {!isDisabled && (
+                  <>
+                    <CloudUploadIcon
+                      sx={{ fontSize: "3.5rem", color: "#8bb8e0" }}
+                    />
+                    <Typography>{uploaderText}</Typography>
+                  </>
+                )}
               </Box>
             </Box>
           )}

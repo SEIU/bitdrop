@@ -30,7 +30,7 @@ export default function Upload() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-  const [fileName, setFileName] = useState("");
+  const [fileName, setFileName] = useState(null);
   const [loading, setLoading] = useState(false);
   const [canSubmit, setCanSubmit] = useState(false);
   const [postIsSuccessful, setPostIsSuccessful] = useState(false);
@@ -95,7 +95,7 @@ export default function Upload() {
     setSelectedFile(null);
     setPassword(generatePassword());
     setEmail("");
-    setFileName("");
+    setFileName(null);
     setLoading(false);
     setPostIsSuccessful(false);
   };
@@ -111,7 +111,6 @@ export default function Upload() {
         <Box sx={inputBoxStyles}>
           <Typography>Upload the file you want to share.</Typography>
           <Box>
-            <Typography>File selected: {fileName}</Typography>
             <Uploader
               handleFileDrop={handleFileDrop}
               isDisabled={postIsSuccessful}
