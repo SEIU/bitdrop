@@ -15,8 +15,8 @@ const dropZoneStyles = {
   margin: "10px",
 };
 
-export default function Uploader({ handleFileDrop, isDisabled, reset }) {
-  const [fileName, setFileName] = useState(null);
+export default function Uploader({ handleFileDrop, isDisabled, fileName }) {
+  const [displayName, setDisplayName] = useState(fileName);
   const [uploaderText, setUploaderText] = useState(
     "Drag & drop a file here, or click to select a file"
   );
@@ -30,7 +30,6 @@ export default function Uploader({ handleFileDrop, isDisabled, reset }) {
   }, [fileName]);
 
   const onDrop = (selectedFile) => {
-    setFileName(selectedFile[0].path);
     handleFileDrop(selectedFile);
   };
 

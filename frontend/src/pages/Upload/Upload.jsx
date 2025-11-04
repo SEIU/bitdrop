@@ -74,7 +74,7 @@ export default function Upload() {
       console.error("Error posting file:", error);
       setLoading(false);
       // TODO show some messaging
-      setPostIsSuccessful(true); // XXX UNHACK THIS
+      // setPostIsSuccessful(true); // XXX UNHACK THIS
     }
   };
 
@@ -114,6 +114,7 @@ export default function Upload() {
             <Uploader
               handleFileDrop={handleFileDrop}
               isDisabled={postIsSuccessful}
+              fileName={fileName}
             />
           </Box>
         </Box>
