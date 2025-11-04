@@ -11,15 +11,11 @@ export function getBackendUrl() {
 
 export const generatePassword = async () => {
   const wordList = await axios
-    .get("/wordlist.txt")
+    .get("/wordlist-10k-clean.json")
     .then((response) => {
-      const textData = response.data;
-      const words = textData.trim().split("\n");
-      return words;
+      return response.data;
     })
-    .catch((error) =>
-      console.error("Error fetching or decompressing file:", error)
-    );
+    .catch((error) => console.error("Error fetching word file:", error));
 
   const passwordParts = [];
   for (let i = 0; i < PASSWORD_LENGTH; i++) {
