@@ -1,6 +1,7 @@
 import Dropzone from "react-dropzone";
 import { Box, Typography } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { useEffect } from "react";
 
 const dropZoneStyles = {
   border: "2px dashed #cccccc",
@@ -14,7 +15,11 @@ const dropZoneStyles = {
   margin: "10px",
 };
 
-export default function Uploader({ handleFileDrop }) {
+export default function Uploader({ handleFileDrop, isDisabled }) {
+  useEffect(() => {
+    console.log("dropzone is disabled: ", isDisabled);
+  });
+
   const onDrop = (selectedFile) => {
     handleFileDrop(selectedFile);
   };
@@ -22,7 +27,7 @@ export default function Uploader({ handleFileDrop }) {
   return (
     <>
       <Box sx={dropZoneStyles}>
-        <Dropzone onDrop={onDrop}>
+        <Dropzone onDrop={onDrop} disabled={isDisabled}>
           {({ getRootProps, getInputProps }) => (
             <Box {...getRootProps()}>
               <input {...getInputProps()} />
