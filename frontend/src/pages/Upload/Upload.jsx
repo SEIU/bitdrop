@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
 import axios from "axios";
 import { getBackendUrl } from "../../utils";
 import Uploader from "./Uploader";
+import PasswordField from "../../components/PasswordField";
+import { containerStyles } from "../../components/sharedStyles";
 import {
   generatePassword,
   isValidEmail,
@@ -31,6 +34,8 @@ export default function Upload() {
   const [loading, setLoading] = useState(false);
   const [canSubmit, setCanSubmit] = useState(false);
   const [postIsSuccessful, setPostIsSuccessful] = useState(false);
+  const [navId, setNavId] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     setCanSubmit(selectedFile && isValidEmail(email));
@@ -45,6 +50,7 @@ export default function Upload() {
     setLoading(true);
 
     let id = createToken();
+    setNavId(id);
     let fileHash = await createFileHash(selectedFile[0]);
     let encryptedFile = await processAndEncryptFile(
       selectedFile[0],
@@ -53,7 +59,7 @@ export default function Upload() {
     );
     let url = `${backendUrl}/api/upload/`;
     let body = {
-      "send-to": email,
+      email: email,
       id: id,
       raw_hash: fileHash,
       filename: fileName,
@@ -76,8 +82,13 @@ export default function Upload() {
   };
 
   useEffect(() => {
-    setPassword(generatePassword());
+    getPassword();
   }, []);
+
+  const getPassword = async () => {
+    const pw = await generatePassword();
+    setPassword(pw);
+  };
 
   const handleReset = () => {
     setSelectedFile(null);
@@ -88,15 +99,12 @@ export default function Upload() {
     setPostIsSuccessful(false);
   };
 
+  const goToDownload = () => {
+    navigate(`verify?id=${navId}`);
+  };
+
   return (
-    <Container
-      sx={{
-        backgroundColor: "white",
-        marginTop: "50px",
-        borderRadius: "8px",
-        padding: "50px !important",
-      }}
-    >
+    <Container sx={containerStyles}>
       {loading ? (
         <Box>
           <CircularProgress />
@@ -106,18 +114,25 @@ export default function Upload() {
           {postIsSuccessful ? (
             <>
               <Box>
-                <Typography>Success!</Typography>
-                <Typography>
-                  The download link was sent to {email}. Don't forget to send
-                  them the password via a different channel.
-                </Typography>
+                <Box sx={{ marginBottom: "10px" }}>
+                  <Typography>Success!</Typography>
+                  <Typography>
+                    The download link was sent to {email}. Copy the password and
+                    share via a different channel, such as Slack, Signal, or
+                    text message. The person who receives the link will be able
+                    to click on it, enter the password, and download the file.
+                  </Typography>
+                </Box>
+
+                <PasswordField password={password} />
+
+                <Button sx={{ marginTop: "20px" }} onClick={handleReset}>
+                  Send Another File
+                </Button>
               </Box>
               <Box>
-                <Typography>Password: {password}</Typography>
-                <Typography>deletion link</Typography>
-              </Box>
-              <Box>
-                <Button onClick={handleReset}>Send Another File</Button>
+                {/* FOR DEVELOPMENT ONLY */}
+                <Button onClick={goToDownload}>Verify Download (devs)</Button>
               </Box>
             </>
           ) : (
@@ -145,25 +160,9 @@ export default function Upload() {
                 </Box>
                 <Box sx={inputBoxStyles}>
                   <Typography>
-                    3. Copy the password and share via a different channel, such
-                    as Slack, Signal, or text message. The person who receives
-                    the link will be able to click on it, enter the password,
-                    and download the file.
-                  </Typography>
-                  <Typography
-                    sx={{
-                      padding: "15px",
-                      border: "#8080805c 1px solid",
-                      borderRadius: "5px",
-                      width: "fit-content",
-                    }}
-                  >
-                    {password}
+                    Files will be deleted after 24 hours or at first download.
                   </Typography>
                 </Box>
-                <Typography>
-                  Files will be deleted after 24 hours or at first download.
-                </Typography>
               </Box>
               <Box>
                 <Button onClick={handlePost} disabled={!canSubmit}>
