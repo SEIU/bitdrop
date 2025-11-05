@@ -27,6 +27,7 @@ export const generatePassword = async () => {
 };
 
 export const isValidEmail = (input) => {
+  // Pretty good regex for email address validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(input);
 };
