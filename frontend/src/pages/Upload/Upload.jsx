@@ -93,7 +93,7 @@ export default function Upload() {
 
   const handleReset = () => {
     setSelectedFile(null);
-    setPassword(generatePassword());
+    getPassword();
     setEmail("");
     setFileName(null);
     setLoading(false);
