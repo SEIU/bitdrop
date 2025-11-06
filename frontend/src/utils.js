@@ -1,14 +1,6 @@
 import axios from "axios";
 const PASSWORD_LENGTH = 4;
 
-export function getBackendUrl() {
-  const developmentUrl = "http://127.0.0.1:8000";
-  if (window.location.hostname === "localhost") {
-    return developmentUrl;
-  }
-  return "https://127.0.0.1:8443";
-}
-
 export const generatePassword = async () => {
   const wordList = await axios
     .get("/wordlist-10k-clean.json")

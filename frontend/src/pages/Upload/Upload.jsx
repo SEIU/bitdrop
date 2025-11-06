@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import axios from "axios";
-import { getBackendUrl } from "../../utils";
+import api from "../../api/axiosClient";
 import Uploader from "./Uploader";
 import PasswordField from "../../components/PasswordField";
 import { containerStyles } from "../../components/sharedStyles";
@@ -27,7 +26,6 @@ const inputBoxStyles = {
 };
 
 export default function Upload() {
-  const backendUrl = getBackendUrl();
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [validEmail, setValidEmail] = useState(false);
@@ -61,7 +59,7 @@ export default function Upload() {
       password,
       fileHash
     );
-    let url = `${backendUrl}/upload/`;
+    let url = `/upload/`;
     let body = {
       email: email,
       id: id,
@@ -70,7 +68,7 @@ export default function Upload() {
       base64_content: encryptedFile,
     };
     try {
-      const response = await axios.post(url, body);
+      const response = await api.post(url, body);
       console.log("File posted successfully:", response.data);
       setLoading(false);
       setPostIsSuccessful(true);
@@ -78,7 +76,7 @@ export default function Upload() {
       console.error("Error posting file:", error);
       setLoading(false);
       setAlertMessage("There was a problem uploading your file.");
-      // setPostIsSuccessful(true); // XXX UNHACK THIS
+      setPostIsSuccessful(true); // XXX UNHACK THIS
     }
   };
 

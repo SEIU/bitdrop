@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api/axiosClient";
 import { useSearchParams } from "react-router";
-import { getBackendUrl } from "../utils";
 import { decryptFile } from "../utils";
 import {
   Button,
@@ -14,7 +13,6 @@ import {
 import { containerStyles } from "../components/sharedStyles";
 
 export default function Download() {
-  const backendUrl = getBackendUrl();
   const [searchParams, setSearchParams] = useSearchParams();
   const [password, setPassword] = useState("");
   const [downloadDisabled, setDownloadDisabled] = useState(true);
@@ -32,11 +30,11 @@ export default function Download() {
 
   const handleDownload = async () => {
     let id = searchParams.get("id");
-    let url = `${backendUrl}/download/${id}`;
+    let url = `/download/${id}`;
     let hash;
 
     try {
-      const response = await axios.get(url);
+      const response = await api.get(url);
       hash = response.data.raw_hash;
       let plainTextBlob = await decryptFile(
         response.data.base64_content,
@@ -70,9 +68,9 @@ export default function Download() {
   };
 
   const deleteFile = async (id, hash) => {
-    let url = `${backendUrl}/download/${id}/${hash}`;
+    let url = `/download/${id}/${hash}`;
     try {
-      const response = await axios.delete(url);
+      const response = await api.delete(url);
     } catch (error) {
       console.error("Error downloading file:", error);
     }
