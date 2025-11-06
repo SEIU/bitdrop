@@ -29,6 +29,7 @@ export default function Upload() {
   const backendUrl = getBackendUrl();
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [validEmail, setValidEmail] = useState(true);
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileName, setFileName] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -38,7 +39,7 @@ export default function Upload() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setCanSubmit(selectedFile && isValidEmail(email));
+    setCanSubmit(selectedFile && validEmail);
   }, [email, selectedFile]);
 
   const handleFileDrop = async (file) => {
@@ -79,7 +80,9 @@ export default function Upload() {
   };
 
   const handleEmailChange = (e) => {
-    setEmail(e.target.value);
+    let value = e.target.value;
+    setEmail(value);
+    setValidEmail(isValidEmail(value));
   };
 
   useEffect(() => {
@@ -131,7 +134,13 @@ export default function Upload() {
             variant="outlined"
             disabled={postIsSuccessful}
             onChange={handleEmailChange}
+            sx={{ width: "300px" }}
           />
+          {!validEmail && (
+            <Typography sx={{ color: "red" }}>
+              Please enter a valid email
+            </Typography>
+          )}
         </Box>
         <Box sx={inputBoxStyles}>
           <Typography>
