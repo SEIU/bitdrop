@@ -31,6 +31,7 @@ export default function Upload() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [validEmail, setValidEmail] = useState(false);
+  const [emailIsTouched, setEmailIsTouched] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileName, setFileName] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -77,7 +78,7 @@ export default function Upload() {
       console.error("Error posting file:", error);
       setLoading(false);
       setAlertMessage("There was a problem uploading your file.");
-      setPostIsSuccessful(true); // XXX UNHACK THIS
+      // setPostIsSuccessful(true); // XXX UNHACK THIS
     }
   };
 
@@ -85,6 +86,7 @@ export default function Upload() {
     let value = e.target.value;
     setEmail(value);
     setValidEmail(isValidEmail(value));
+    setEmailIsTouched(true);
   };
 
   useEffect(() => {
@@ -152,13 +154,14 @@ export default function Upload() {
               disabled={postIsSuccessful}
               onChange={handleEmailChange}
               sx={{
+                marginTop: "10px",
                 width: {
                   xs: "100%",
                   md: "300px",
                 },
               }}
             />
-            {!validEmail && (
+            {emailIsTouched && !validEmail && (
               <Typography sx={{ color: "red" }}>
                 Please enter a valid email
               </Typography>
