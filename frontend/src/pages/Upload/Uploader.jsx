@@ -13,6 +13,7 @@ const dropZoneStyles = {
   flexDirection: "column",
   justifyContent: "center",
   margin: "10px",
+  padding: "20px",
 };
 
 export default function Uploader({ handleFileDrop, isDisabled, fileName }) {

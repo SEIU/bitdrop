@@ -114,7 +114,13 @@ export default function Download() {
         </Box>
 
         <Button
-          sx={{ marginTop: "20px", width: "200px" }}
+          sx={{
+            marginTop: "40px",
+            width: {
+              xs: "100%",
+              md: "fit-content",
+            },
+          }}
           onClick={handleDownload}
           disabled={downloadDisabled}
         >

@@ -30,7 +30,7 @@ export default function Upload() {
   const backendUrl = getBackendUrl();
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [validEmail, setValidEmail] = useState(true);
+  const [validEmail, setValidEmail] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileName, setFileName] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -77,7 +77,7 @@ export default function Upload() {
       console.error("Error posting file:", error);
       setLoading(false);
       setAlertMessage("There was a problem uploading your file.");
-      // setPostIsSuccessful(true); // XXX UNHACK THIS
+      setPostIsSuccessful(true); // XXX UNHACK THIS
     }
   };
 
@@ -151,7 +151,12 @@ export default function Upload() {
               variant="outlined"
               disabled={postIsSuccessful}
               onChange={handleEmailChange}
-              sx={{ width: "300px" }}
+              sx={{
+                width: {
+                  xs: "100%",
+                  md: "300px",
+                },
+              }}
             />
             {!validEmail && (
               <Typography sx={{ color: "red" }}>
@@ -167,7 +172,16 @@ export default function Upload() {
         </Box>
         {!postIsSuccessful && (
           <Box>
-            <Button onClick={handlePost} disabled={!canSubmit}>
+            <Button
+              onClick={handlePost}
+              disabled={!canSubmit}
+              sx={{
+                width: {
+                  xs: "100%",
+                  md: "fit-content",
+                },
+              }}
+            >
               Submit
             </Button>
           </Box>
@@ -189,7 +203,16 @@ export default function Upload() {
 
               <PasswordField password={password} />
 
-              <Button sx={{ marginTop: "20px" }} onClick={handleReset}>
+              <Button
+                sx={{
+                  marginTop: "20px",
+                  width: {
+                    xs: "100%",
+                    md: "fit-content",
+                  },
+                }}
+                onClick={handleReset}
+              >
                 Send Another File
               </Button>
             </Box>
