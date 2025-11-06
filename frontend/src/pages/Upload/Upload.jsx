@@ -36,6 +36,7 @@ export default function Upload() {
   const [loading, setLoading] = useState(false);
   const [canSubmit, setCanSubmit] = useState(false);
   const [postIsSuccessful, setPostIsSuccessful] = useState(false);
+  const [alertMessage, setAlertMessage] = useState(null);
   const [navId, setNavId] = useState("");
   const navigate = useNavigate();
 
@@ -77,7 +78,7 @@ export default function Upload() {
     } catch (error) {
       console.error("Error posting file:", error);
       setLoading(false);
-      // TODO show some messaging
+      setAlertMessage("There was a problem uploading your file.");
       // setPostIsSuccessful(true); // XXX UNHACK THIS
     }
   };
@@ -106,16 +107,28 @@ export default function Upload() {
     setPostIsSuccessful(false);
   };
 
+  const handleAlertClose = () => {
+    setAlertMessage(null);
+  };
+
   const goToDownload = () => {
     navigate(`verify?id=${navId}`);
   };
 
   return (
     <>
-      {/* <Alert severity="error">This is an error Alert.</Alert> */}
       {loading && <LinearProgress />}
 
       <Container sx={containerStyles}>
+        {alertMessage && (
+          <Alert
+            severity="error"
+            sx={{ marginBottom: "20px" }}
+            onClose={handleAlertClose}
+          >
+            {alertMessage}
+          </Alert>
+        )}
         <Box>
           <Box sx={inputBoxStyles}>
             <Typography>Upload the file you want to share.</Typography>
