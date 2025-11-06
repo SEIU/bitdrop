@@ -16,7 +16,6 @@ const dropZoneStyles = {
 };
 
 export default function Uploader({ handleFileDrop, isDisabled, fileName }) {
-  const [displayName, setDisplayName] = useState(fileName);
   const [uploaderText, setUploaderText] = useState(
     "Drag & drop a file here, or click to select a file"
   );
