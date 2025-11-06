@@ -3,7 +3,14 @@ import axios from "axios";
 import { useSearchParams } from "react-router";
 import { getBackendUrl } from "../utils";
 import { decryptFile } from "../utils";
-import { Button, TextField, Typography, Container, Box } from "@mui/material";
+import {
+  Button,
+  TextField,
+  Typography,
+  Container,
+  Box,
+  Alert,
+} from "@mui/material";
 import { containerStyles } from "../components/sharedStyles";
 
 export default function Download() {
@@ -11,8 +18,7 @@ export default function Download() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [password, setPassword] = useState("");
   const [downloadDisabled, setDownloadDisabled] = useState(true);
-
-  // TODO handle failure to decrypt/download
+  const [alertMessage, setAlertMessage] = useState(null);
 
   useEffect(() => {
     if (password !== "") {
@@ -39,8 +45,16 @@ export default function Download() {
       );
       downloadBlob(plainTextBlob, response.data.filename);
       await deleteFile(id, hash);
-    } catch (error) {
-      console.error("Error downloading file:", error);
+      setDownloadDisabled(true);
+    } catch (err) {
+      if (err.response?.status === 404) {
+        setAlertMessage(err.response.data.message);
+      } else {
+        setAlertMessage(
+          "There was a problem decrypting this file. Make sure you have the correct password for this asset."
+        );
+      }
+      console.error("Error downloading file:", err);
     }
   };
 
@@ -56,17 +70,29 @@ export default function Download() {
   };
 
   const deleteFile = async (id, hash) => {
-    let url = `${backendUrl}/api/download/${id}/${hash}`;
+    let url = `${backendUrl}/download/${id}/${hash}`;
     try {
       const response = await axios.delete(url);
-      console.log("delete yes, ", response);
     } catch (error) {
       console.error("Error downloading file:", error);
     }
   };
 
+  const handleAlertClose = () => {
+    setAlertMessage(null);
+  };
+
   return (
     <Container sx={containerStyles}>
+      {alertMessage && (
+        <Alert
+          severity="error"
+          sx={{ marginBottom: "20px" }}
+          onClose={handleAlertClose}
+        >
+          {alertMessage}
+        </Alert>
+      )}
       <Box
         sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
       >

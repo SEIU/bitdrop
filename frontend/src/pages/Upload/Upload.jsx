@@ -40,8 +40,6 @@ export default function Upload() {
   const [navId, setNavId] = useState("");
   const navigate = useNavigate();
 
-  // throw new Error("TEST ERROR");
-
   useEffect(() => {
     setCanSubmit(selectedFile && validEmail);
   }, [email, selectedFile]);
@@ -163,7 +161,7 @@ export default function Upload() {
           </Box>
           <Box sx={inputBoxStyles}>
             <Typography>
-              Files will be deleted after 24 hours or at first download.
+              Files will be deleted after 24 hours or after one download.
             </Typography>
           </Box>
         </Box>
