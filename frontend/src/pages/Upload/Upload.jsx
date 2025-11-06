@@ -19,6 +19,7 @@ import {
   TextField,
   Button,
   LinearProgress,
+  Alert,
 } from "@mui/material";
 
 const inputBoxStyles = {
@@ -37,6 +38,8 @@ export default function Upload() {
   const [postIsSuccessful, setPostIsSuccessful] = useState(false);
   const [navId, setNavId] = useState("");
   const navigate = useNavigate();
+
+  // throw new Error("TEST ERROR");
 
   useEffect(() => {
     setCanSubmit(selectedFile && validEmail);
@@ -108,79 +111,84 @@ export default function Upload() {
   };
 
   return (
-    <Container sx={containerStyles}>
+    <>
+      {/* <Alert severity="error">This is an error Alert.</Alert> */}
       {loading && <LinearProgress />}
-      <Box>
-        <Box sx={inputBoxStyles}>
-          <Typography>Upload the file you want to share.</Typography>
-          <Box>
-            <Uploader
-              handleFileDrop={handleFileDrop}
-              isDisabled={postIsSuccessful}
-              fileName={fileName}
+
+      <Container sx={containerStyles}>
+        <Box>
+          <Box sx={inputBoxStyles}>
+            <Typography>Upload the file you want to share.</Typography>
+            <Box>
+              <Uploader
+                handleFileDrop={handleFileDrop}
+                isDisabled={postIsSuccessful}
+                fileName={fileName}
+              />
+            </Box>
+          </Box>
+          <Box sx={inputBoxStyles}>
+            <Typography>
+              Enter the email of the person you want to share the file with. An
+              email with a link to download the file will be automatically be
+              sent to them.
+            </Typography>
+            <TextField
+              type="email"
+              value={email}
+              label="Email (required)"
+              variant="outlined"
+              disabled={postIsSuccessful}
+              onChange={handleEmailChange}
+              sx={{ width: "300px" }}
             />
+            {!validEmail && (
+              <Typography sx={{ color: "red" }}>
+                Please enter a valid email
+              </Typography>
+            )}
+          </Box>
+          <Box sx={inputBoxStyles}>
+            <Typography>
+              Files will be deleted after 24 hours or at first download.
+            </Typography>
           </Box>
         </Box>
-        <Box sx={inputBoxStyles}>
-          <Typography>
-            Enter the email of the person you want to share the file with. An
-            email with a link to download the file will be automatically be sent
-            to them.
-          </Typography>
-          <TextField
-            type="email"
-            value={email}
-            label="Email (required)"
-            variant="outlined"
-            disabled={postIsSuccessful}
-            onChange={handleEmailChange}
-            sx={{ width: "300px" }}
-          />
-          {!validEmail && (
-            <Typography sx={{ color: "red" }}>
-              Please enter a valid email
-            </Typography>
-          )}
-        </Box>
-        <Box sx={inputBoxStyles}>
-          <Typography>
-            Files will be deleted after 24 hours or at first download.
-          </Typography>
-        </Box>
-      </Box>
-      {!postIsSuccessful && (
-        <Box>
-          <Button onClick={handlePost} disabled={!canSubmit}>
-            Submit
-          </Button>
-        </Box>
-      )}
-
-      {postIsSuccessful && (
-        <>
+        {!postIsSuccessful && (
           <Box>
-            <Box sx={{ marginBottom: "10px" }}>
-              <Typography>Success!</Typography>
-              <Typography>
-                The download link was sent to <b>{email}</b>. Copy the password
-                and share via a different channel, such as Slack, Signal, or
-                text message. The person who receives the link will be able to
-                click on it, enter the password, and download the file.
-              </Typography>
-            </Box>
-
-            <PasswordField password={password} />
-
-            <Button sx={{ marginTop: "20px" }} onClick={handleReset}>
-              Send Another File
+            <Button onClick={handlePost} disabled={!canSubmit}>
+              Submit
             </Button>
           </Box>
-          <Box>
-            {/* FOR DEVELOPMENT ONLY */}
-            <Button onClick={goToDownload}>Verify Download (devs)</Button>
-          </Box>
-        </>
-      )}
-    </Container>
+        )}
+
+        {postIsSuccessful && (
+          <>
+            <Box>
+              <Box sx={{ marginBottom: "10px" }}>
+                <Typography>Success!</Typography>
+                <Typography>
+                  The download link was sent to <b>{email}</b>. Copy the
+                  password and share via a different channel, such as Slack,
+                  Signal, or text message. The person who receives the link will
+                  be able to click on it, enter the password, and download the
+                  file.
+                </Typography>
+              </Box>
+
+              <PasswordField password={password} />
+
+              <Button sx={{ marginTop: "20px" }} onClick={handleReset}>
+                Send Another File
+              </Button>
+            </Box>
+            <Box>
+              {/* FOR DEVELOPMENT ONLY */}
+              <Button onClick={goToDownload}>Verify Download (devs)</Button>
+            </Box>
+          </>
+        )}
+      </Container>
+    </>
   );
 }

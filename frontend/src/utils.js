@@ -6,7 +6,7 @@ export function getBackendUrl() {
   if (window.location.hostname === "localhost") {
     return developmentUrl;
   }
-  return "https://api.b2.seiu.org";
+  return "https://localhost:8443";
 }
 
 export const generatePassword = async () => {
