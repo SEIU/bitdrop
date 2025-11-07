@@ -15,6 +15,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Add secrets to repository checkout
+        env:
+          environment: ${{ secrets.ENVIRONMENT }}
+        run: |
+          mkdir -p secrets
+          echo "${environment}" > $HOME/bitdrop/frontend/.env
+
       - name: Run backend tests
         run: |
           export PATH="$PATH:$HOME/.local/bin"
