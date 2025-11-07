@@ -41,7 +41,9 @@ export default function Uploader({ handleFileDrop, isDisabled, fileName }) {
             <Box {...getRootProps()}>
               <input {...getInputProps()} />
               <Box>
-                <Typography>{fileName}</Typography>
+                <Typography>
+                  <b>{fileName}</b>
+                </Typography>
                 {!isDisabled && (
                   <>
                     <CloudUploadIcon
