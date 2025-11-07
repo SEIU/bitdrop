@@ -19,7 +19,8 @@ jobs:
         env:
           environment: ${{ secrets.ENVIRONMENT }}
         run: |
-          mkdir -p secrets
+          pwd
+          tree
           echo "${environment}" > $HOME/bitdrop/frontend/.env
 
       - name: Run backend tests
