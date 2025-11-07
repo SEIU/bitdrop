@@ -15,9 +15,20 @@ export default function NavBar() {
       <AppBar position="static" sx={{ backgroundColor: "#664697" }}>
         <Toolbar>
           <Link to="/" style={linkStyle}>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              SEIU Bitdrop
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              <img
+                src="/seiu-logo.svg"
+                alt="seiu logo"
+                style={{ width: "120px" }}
+              />
+              <Typography
+                variant="h6"
+                component="div"
+                sx={{ flexGrow: 1, marginLeft: "15px" }}
+              >
+                Bitdrop
+              </Typography>
+            </Box>
           </Link>
         </Toolbar>
       </AppBar>
