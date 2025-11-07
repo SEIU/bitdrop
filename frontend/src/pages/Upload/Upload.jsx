@@ -25,6 +25,8 @@ const inputBoxStyles = {
   marginBottom: "30px",
 };
 
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+
 export default function Upload() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
@@ -36,12 +38,26 @@ export default function Upload() {
   const [canSubmit, setCanSubmit] = useState(false);
   const [postIsSuccessful, setPostIsSuccessful] = useState(false);
   const [alertMessage, setAlertMessage] = useState(null);
+  const [captchaReady, setCaptchaReady] = useState(false);
   const [navId, setNavId] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    setCanSubmit(selectedFile && validEmail);
-  }, [email, selectedFile]);
+    if (typeof grecaptcha === "undefined" || !grecaptcha.ready) {
+      console.error(
+        "reCAPTCHA script not found. Ensure it is loaded globally in the host HTML."
+      );
+      return;
+    }
+    grecaptcha.ready(() => {
+      setCaptchaReady(true);
+      console.log("reCAPTCHA is ready.");
+    });
+  }, []);
+
+  useEffect(() => {
+    setCanSubmit(selectedFile && validEmail && captchaReady);
+  }, [email, selectedFile, captchaReady]);
 
   const handleFileDrop = async (file) => {
     setSelectedFile(file);
@@ -60,14 +76,20 @@ export default function Upload() {
       fileHash
     );
     let url = `/upload/`;
-    let body = {
-      email: email,
-      id: id,
-      raw_hash: fileHash,
-      filename: fileName,
-      base64_content: encryptedFile,
-    };
+
     try {
+      const recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, {
+        action: "upload",
+      });
+      console.log("token: ", recaptchaToken);
+      let body = {
+        email: email,
+        id: id,
+        raw_hash: fileHash,
+        filename: fileName,
+        base64_content: encryptedFile,
+        recaptchaToken: recaptchaToken,
+      };
       const response = await api.post(url, body);
       console.log("File posted successfully:", response.data);
       setLoading(false);
@@ -76,7 +98,7 @@ export default function Upload() {
       console.error("Error posting file:", error);
       setLoading(false);
       setAlertMessage("There was a problem uploading your file.");
-      setPostIsSuccessful(true); // XXX UNHACK THIS
+      // setPostIsSuccessful(true); // XXX FOR DEVS
     }
   };
 
@@ -219,7 +241,7 @@ export default function Upload() {
             </Box>
             <Box>
               {/* FOR DEVELOPMENT ONLY */}
-              <Button onClick={goToDownload}>Verify Download (devs)</Button>
+              {/* <Button onClick={goToDownload}>Verify Download (devs)</Button> */}
             </Box>
           </>
         )}
