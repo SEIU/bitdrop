@@ -20,7 +20,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 class Upload(BaseModel):
     email: EmailStr
     id: uuid.UUID
@@ -32,8 +31,7 @@ class Upload(BaseModel):
 
 
 @app.get("/")
-async def root() -> str:
-    "Welcome to the file exchange service"
+async def root() -> str:    
     return "Welcome to SEIU BitDrop!"
 
 
