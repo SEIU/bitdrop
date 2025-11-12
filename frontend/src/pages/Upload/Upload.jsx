@@ -163,7 +163,8 @@ export default function Upload() {
           <Box sx={inputBoxStyles}>
             <Typography>
               Enter the email of the person with whom you want to share this file. 
-              An email with a download link automatically be sent to the recipient.
+              An email with a download link will automatically be sent to the 
+              recipient.
             </Typography>
             <TextField
               type="email"
