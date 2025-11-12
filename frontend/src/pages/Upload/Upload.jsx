@@ -162,9 +162,8 @@ export default function Upload() {
           </Box>
           <Box sx={inputBoxStyles}>
             <Typography>
-              Enter the email of the person you want to share the file with. An
-              email with a link to download the file will be automatically be
-              sent to them.
+              Enter the email of the person with whom you want to share this file. 
+              An email with a download link automatically be sent to the recipient.
             </Typography>
             <TextField
               type="email"
@@ -216,11 +215,11 @@ export default function Upload() {
               <Box sx={{ marginBottom: "10px" }}>
                 <Typography>Success!</Typography>
                 <Typography>
-                  The download link was sent to <b>{email}</b>. Copy the
-                  password and share via a different channel, such as Slack,
-                  Signal, or text message. The person who receives the link will
-                  be able to click on it, enter the password, and download the
-                  file.
+                  The download link was sent to <b>{email}</b>. Copy the password 
+                  and share over a different channel, such as Slack, Signal, 
+                  Google Chat or other messaging system, or via SMS text message.
+                  The person who receives the link will be able to click on the 
+                  link and enter the password to download the file.
                 </Typography>
               </Box>
 
