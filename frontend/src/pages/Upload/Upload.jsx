@@ -215,9 +215,15 @@ export default function Upload() {
               <Box sx={{ marginBottom: "10px" }}>
                 <Typography>Success!</Typography>
                 <Typography>
-                  The download link was sent to <b>{email}</b>. Copy the password 
-                  and share over a different channel, such as Slack, Signal, 
-                  Google Chat or other messaging system, or via SMS text message.
+                  The download link was sent to <b>{email}</b>.<br/>
+
+                  Copy the password and share over a different channel, such as 
+                  Slack, Signal, Google Chat or other messaging system, or via 
+                  SMS text message.<br/>
+
+                  You may also share the passphrase of English words over the telephone
+                  or speaking in person.<br/>
+
                   The person who receives the link will be able to click on the 
                   link and enter the password to download the file.
                 </Typography>
