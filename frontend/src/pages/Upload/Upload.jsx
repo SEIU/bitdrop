@@ -10,6 +10,7 @@ import {
   createToken,
   createFileHash,
   processAndEncryptFile,
+  isLargeFile,
 } from "../../utils";
 import {
   Container,
@@ -34,6 +35,7 @@ export default function Upload() {
   const [emailIsTouched, setEmailIsTouched] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileName, setFileName] = useState(null);
+  const [largeFile, setLargeFile] = useState(false);
   const [loading, setLoading] = useState(false);
   const [canSubmit, setCanSubmit] = useState(false);
   const [postIsSuccessful, setPostIsSuccessful] = useState(false);
@@ -60,18 +62,18 @@ export default function Upload() {
   }, [email, selectedFile, captchaReady]);
 
   const handleFileDrop = async (file) => {
-    setSelectedFile(file);
+    setSelectedFile(file[0]);
     setFileName(file[0].path);
   };
 
   const handlePost = async () => {
     setLoading(true);
-
+    setLargeFile(isLargeFile(selectedFile));
     let id = createToken();
     setNavId(id);
-    let fileHash = await createFileHash(selectedFile[0]);
+    let fileHash = await createFileHash(selectedFile);
     let encryptedFile = await processAndEncryptFile(
-      selectedFile[0],
+      selectedFile,
       password,
       fileHash
     );
@@ -89,13 +91,14 @@ export default function Upload() {
         base64_content: encryptedFile,
         recaptchaToken: recaptchaToken,
       };
-      const response = await api.post(url, body, { timeout: 120000 });
+      const response = await api.post(url, body, { timeout: 300000 });
       console.log("File posted successfully:", response.data);
       setLoading(false);
       setPostIsSuccessful(true);
     } catch (error) {
       console.error("Error posting file:", error);
       setLoading(false);
+      setLargeFile(false);
       setAlertMessage("There was a problem uploading your file.");
       // setPostIsSuccessful(true); // XXX FOR DEVS
     }
@@ -136,9 +139,14 @@ export default function Upload() {
 
   return (
     <>
-      {loading && <LinearProgress />}
+      {loading && <LinearProgress sx={{ height: "8px" }} />}
 
       <Container sx={containerStyles}>
+        {largeFile && (
+          <Alert severity="info" sx={{ marginBottom: "20px" }}>
+            This is a large file and may take several minutes to upload.
+          </Alert>
+        )}
         {alertMessage && (
           <Alert
             severity="error"
@@ -161,9 +169,9 @@ export default function Upload() {
           </Box>
           <Box sx={inputBoxStyles}>
             <Typography>
-              Enter the email of the person with whom you want to share this file. 
-              An email with a download link will automatically be sent to the 
-              recipient.
+              Enter the email of the person with whom you want to share this
+              file. An email with a download link will automatically be sent to
+              the recipient.
             </Typography>
             <TextField
               type="email"
@@ -215,16 +223,15 @@ export default function Upload() {
               <Box sx={{ marginBottom: "10px" }}>
                 <Typography>Success!</Typography>
                 <Typography>
-                  The download link was sent to <b>{email}</b>.<br/>
-
-                  Copy the password and share over a different channel, such as 
-                  Slack, Signal, Google Chat or other messaging system, or via 
-                  SMS text message.<br/>
-
-                  You may also share the passphrase of English words over the telephone
-                  or speaking in person.<br/>
-
-                  The person who receives the link will be able to click on the 
+                  The download link was sent to <b>{email}</b>.<br />
+                  Copy the password and share over a different channel, such as
+                  Slack, Signal, Google Chat or other messaging system, or via
+                  SMS text message.
+                  <br />
+                  You may also share the passphrase of English words over the
+                  telephone or speaking in person.
+                  <br />
+                  The person who receives the link will be able to click on the
                   link and enter the password to download the file.
                 </Typography>
               </Box>

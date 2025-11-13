@@ -24,6 +24,15 @@ export const isValidEmail = (input) => {
   return emailRegex.test(input);
 };
 
+export const isLargeFile = (file) => {
+  // return file size in MBs
+  if (file?.size && file.size > 0) {
+    return file.size / 1048576 > 20;
+  } else {
+    return false;
+  }
+};
+
 export const createToken = () => {
   return window.crypto.randomUUID();
 };
