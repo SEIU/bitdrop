@@ -20,6 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class Upload(BaseModel):
     email: EmailStr
     id: uuid.UUID
@@ -31,7 +32,7 @@ class Upload(BaseModel):
 
 
 @app.get("/")
-async def root() -> str:    
+async def root() -> str:
     return "Welcome to SEIU BitDrop!"
 
 
@@ -52,7 +53,10 @@ async def upload_file(
     response = None  # Re-bound when sending email
     if not body.unit_test:
         ses_client = boto3.client("ses", region_name="us-west-2")
-        email_body = f"{body.message}\n\nDownload from {bitdrop}/verify?id={body.id}"
+        email_body = (
+            f"{body.message}\n\nDownload the file {body.filename} "
+            f"from {bitdrop}/verify?id={body.id}"
+        )
         msg = {
             "Source": "bitdrop@mail.dsa.seiu.org",
             "Destination": {"ToAddresses": [body.email]},
