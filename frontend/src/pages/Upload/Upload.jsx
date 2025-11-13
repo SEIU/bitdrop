@@ -94,6 +94,7 @@ export default function Upload() {
       const response = await api.post(url, body, { timeout: 300000 });
       console.log("File posted successfully:", response.data);
       setLoading(false);
+      setLargeFile(false);
       setPostIsSuccessful(true);
     } catch (error) {
       console.error("Error posting file:", error);
