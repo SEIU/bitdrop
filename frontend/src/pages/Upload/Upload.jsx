@@ -81,7 +81,6 @@ export default function Upload() {
       const recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, {
         action: "upload",
       });
-      console.log("token: ", recaptchaToken);
       let body = {
         email: email,
         id: id,
@@ -90,7 +89,7 @@ export default function Upload() {
         base64_content: encryptedFile,
         recaptchaToken: recaptchaToken,
       };
-      const response = await api.post(url, body);
+      const response = await api.post(url, body, { timeout: 120000 });
       console.log("File posted successfully:", response.data);
       setLoading(false);
       setPostIsSuccessful(true);
@@ -197,7 +196,7 @@ export default function Upload() {
           <Box>
             <Button
               onClick={handlePost}
-              disabled={!canSubmit}
+              disabled={!canSubmit || loading}
               sx={{
                 width: {
                   xs: "100%",
