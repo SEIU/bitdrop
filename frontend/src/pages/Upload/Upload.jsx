@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import api from "../../api/axiosClient";
 import Uploader from "./Uploader";
@@ -9,8 +9,7 @@ import {
   isValidEmail,
   createToken,
   createFileHash,
-  processAndEncryptFile,
-  isLargeFile,
+  uploadChunkedFile,
 } from "../../utils";
 import {
   Container,
@@ -35,14 +34,21 @@ export default function Upload() {
   const [emailIsTouched, setEmailIsTouched] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileName, setFileName] = useState(null);
-  const [largeFile, setLargeFile] = useState(false);
   const [loading, setLoading] = useState(false);
   const [canSubmit, setCanSubmit] = useState(false);
   const [postIsSuccessful, setPostIsSuccessful] = useState(false);
   const [alertMessage, setAlertMessage] = useState(null);
   const [captchaReady, setCaptchaReady] = useState(false);
   const [navId, setNavId] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatusMessage, setUploadStatusMessage] =
+    useState("Ready to upload.");
   const navigate = useNavigate();
+  const updateProgress = useCallback(
+    (percent) => setUploadProgress(percent),
+    []
+  );
+  const updateMessage = useCallback((msg) => setUploadStatusMessage(msg), []);
 
   useEffect(() => {
     if (typeof grecaptcha === "undefined" || !grecaptcha.ready) {
@@ -68,38 +74,52 @@ export default function Upload() {
 
   const handlePost = async () => {
     setLoading(true);
-    setLargeFile(isLargeFile(selectedFile));
+    setAlertMessage(null);
     let id = createToken();
     setNavId(id);
-    let fileHash = await createFileHash(selectedFile);
-    let encryptedFile = await processAndEncryptFile(
-      selectedFile,
-      password,
-      fileHash
-    );
-    let url = `/upload/`;
 
     try {
+      // TODO post to verification endpoint
       const recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, {
         action: "upload",
       });
-      let body = {
+
+      // get the initial file hash (partial hash for large files, full for small files)
+      const fileHash = await createFileHash(selectedFile);
+
+      // chunked encryption and upload (multi-step process with progress tracking)
+      updateMessage("Beginning upload ...");
+      const isSuccess = await uploadChunkedFile({
+        selectedFile,
+        password,
+        fileHash,
+        id,
+        updateProgress,
+        updateMessage,
+      });
+
+      if (!isSuccess) {
+        throw new Error("Chunked upload failed. Check console for details.");
+      }
+
+      // post final metadata
+      updateMessage("Upload complete.");
+      let finalBody = {
         email: email,
         id: id,
         raw_hash: fileHash,
         filename: fileName,
-        base64_content: encryptedFile,
-        recaptchaToken: recaptchaToken,
       };
-      const response = await api.post(url, body, { timeout: 300000 });
+      // this is apparently how it's done
+      const response = await api.post(`/upload/complete-session`, finalBody);
+
       console.log("File posted successfully:", response.data);
       setLoading(false);
-      setLargeFile(false);
       setPostIsSuccessful(true);
+      setUploadProgress(100);
     } catch (error) {
       console.error("Error posting file:", error);
       setLoading(false);
-      setLargeFile(false);
       setAlertMessage("There was a problem uploading your file.");
       // setPostIsSuccessful(true); // XXX FOR DEVS
     }
@@ -128,6 +148,8 @@ export default function Upload() {
     setFileName(null);
     setLoading(false);
     setPostIsSuccessful(false);
+    setUploadProgress(0);
+    setUploadStatusMessage("Ready to upload.");
   };
 
   const handleAlertClose = () => {
@@ -140,12 +162,21 @@ export default function Upload() {
 
   return (
     <>
-      {loading && <LinearProgress sx={{ height: "8px" }} />}
-
+      {loading && uploadProgress === 0 && (
+        <LinearProgress sx={{ height: "8px" }} />
+      )}{" "}
+      {loading && uploadProgress > 0 && uploadProgress < 100 && (
+        <LinearProgress
+          variant="determinate"
+          value={uploadProgress}
+          sx={{ height: "8px" }}
+        />
+      )}
       <Container sx={containerStyles}>
-        {largeFile && (
+        {loading && (
           <Alert severity="info" sx={{ marginBottom: "20px" }}>
-            This is a large file and may take several minutes to upload.
+            Upload Status:{" "}
+            <span className="font-bold">{uploadStatusMessage}</span>
           </Alert>
         )}
         {alertMessage && (
@@ -163,7 +194,7 @@ export default function Upload() {
             <Box>
               <Uploader
                 handleFileDrop={handleFileDrop}
-                isDisabled={postIsSuccessful}
+                isDisabled={postIsSuccessful || loading}
                 fileName={fileName}
               />
             </Box>
