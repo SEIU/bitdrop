@@ -79,10 +79,19 @@ export default function Upload() {
     setNavId(id);
 
     try {
-      // TODO post to verification endpoint
+      // verify humanity
       const recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, {
         action: "upload",
       });
+      const isHuman = await api.post(`/authentication`, {
+        recaptchaToken: recaptchaToken,
+      });
+      if (!isHuman) {
+        setLoading(false);
+        setAlertMessage("CAPTCHA verification failed. Please try again.");
+        console.error("Not a human.");
+        return;
+      }
 
       // get the initial file hash (partial hash for large files, full for small files)
       const fileHash = await createFileHash(selectedFile);
