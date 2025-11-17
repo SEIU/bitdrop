@@ -86,6 +86,17 @@ await fetch(
 
 # Backend Routes
 
+## POST api/authenticate/
+
+Frontend sends a google recaptcha token for the backend to verify.
+
+```json
+{
+    recaptchaToken: recaptchaToken,
+}
+```
+Expects response of `true` or `false`
+
 ## POST api/upload/
 
 The JSON body contains both metadata about the upload and the encrypted contents
