@@ -86,7 +86,7 @@ await fetch(
 
 # Backend Routes
 
-## POST api/upload/
+## POST upload/
 
 The JSON body contains both metadata about the upload and the encrypted contents
 that will be stored by the backend.  A body will resemble:
@@ -109,7 +109,7 @@ The fields "id" and "raw_hash" may be anything that a frontend chooses to use. T
 backend does not validate the format of these. However, for the security of th
 protocol, we will use UUIDs for "id" and "SHA-1" hashes for "raw_hash."¹
 
-## GET api/download/\<id\>
+## GET download/\<id\>
 
 If the file exists, return a 200 status. The body will resemble:
 
@@ -126,7 +126,7 @@ explicitly never sent to the backend.
 
 If the file does not exist, a 404 is returned.
 
-## DELETE api/download/\<id\>/\<raw\_hash\>
+## DELETE download/\<id\>/\<raw\_hash\>
 
 As a policy on the frontend, a file will be deleted after successful decryption
 and download.  The frontend *should* call the deletion route under that
