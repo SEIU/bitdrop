@@ -187,7 +187,7 @@ If the file exists, return a 200 status. The body will resemble:
 The frontend will decide whether the password is acceptable.  This password is
 explicitly never sent to the backend.  We expect that the `iv` will be an
 SHA-256 hash of the original uploaded file, but the backend does not enforce
-any contraint on what is used for an IC.
+any contraint on what is used for an IV (initialization vector).
 
 If the file does not exist, a 404 is returned.
 
