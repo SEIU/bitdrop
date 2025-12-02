@@ -42,10 +42,10 @@ export default function Download() {
         let plainTextBlob = await decryptFile(
           encrytedFile,
           password,
-          response.data.iv
+          response.data.fileHash
         );
         downloadBlob(plainTextBlob, response.data.filename);
-        await deleteFile(id, response.data.iv);
+        await deleteFile(id, response.data.fileHash);
         setDownloadDisabled(true);
       } else {
         // handle error TODO

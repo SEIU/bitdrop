@@ -10,7 +10,6 @@ import {
   createToken,
   createFileHash,
   uploadChunkedFile,
-  getIV,
 } from "../../utils";
 import {
   Container,
@@ -125,7 +124,7 @@ export default function Upload() {
     let finalBody = {
       email: email,
       fileId: id,
-      iv: getIV(fileHash),
+      fileHash: fileHash,
       filename: fileName,
     };
     let response;
