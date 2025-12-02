@@ -10,6 +10,7 @@ import {
   createToken,
   createFileHash,
   uploadChunkedFile,
+  getIV,
 } from "../../utils";
 import {
   Container,
@@ -115,12 +116,13 @@ export default function Upload() {
       updateMessage("Upload complete.");
       let finalBody = {
         email: email,
-        id: id,
-        raw_hash: fileHash,
+        fileId: id,
+        iv: getIV(fileHash),
         filename: fileName,
       };
       // this is apparently how it's done
-      const response = await api.post(`/upload/complete-session`, finalBody);
+      const response = await api.post(`/upload/complete-upload`, finalBody);
+      // TODO send 3 times
 
       console.log("File posted successfully:", response.data);
       setLoading(false);

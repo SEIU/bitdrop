@@ -92,6 +92,12 @@ const base64ToArrayBuffer = (base64) => {
   return bytes.buffer;
 };
 
+export const getIV = (hash) => {
+  const ivHex = hash.slice(0, 32);
+  const iv = hexToBytes(ivHex);
+  return iv;
+};
+
 // encrypts a single file chunk and upload with retries/exponential backoff
 const encryptAndUploadChunk = async (
   chunk,
@@ -99,11 +105,9 @@ const encryptAndUploadChunk = async (
   fileId,
   chunkIndex,
   totalChunks,
-  fileName,
   hash
 ) => {
-  const ivHex = hash.slice(0, 32);
-  let iv = hexToBytes(ivHex);
+  const iv = getIV(hash);
 
   // read the chunk into an ArrayBuffer
   const chunkBuffer = await new Promise((resolve, reject) => {
@@ -125,8 +129,6 @@ const encryptAndUploadChunk = async (
     fileId: fileId,
     chunkIndex: chunkIndex,
     totalChunks: totalChunks,
-    fileName: fileName,
-    iv: arrayBufferToBase64(iv),
     encryptedData: arrayBufferToBase64(ciphertext),
   };
 
@@ -188,7 +190,6 @@ export const uploadChunkedFile = async ({
       id,
       i,
       numChunks,
-      selectedFile.name,
       fileHash
     );
 
@@ -212,8 +213,7 @@ export const uploadChunkedFile = async ({
 };
 
 export const decryptFile = async (base64_content, password, hash) => {
-  const ivHex = hash.slice(0, 32);
-  let iv = hexToBytes(ivHex);
+  const iv = getIV(hash);
   const key = await deriveKeyFromPassword(password, iv);
 
   let contentArrayBuffer = base64ToArrayBuffer(base64_content);
