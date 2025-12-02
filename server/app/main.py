@@ -120,7 +120,7 @@ async def upload_file(
             content={
                 "message": "Not all encrypted chunks are available",
                 "totalChunks": count,
-                "available": sorted(found_chunks),
+                "available": sorted(str(chunk) for chunk in found_chunks),
             },
             status_code=409,
         )
