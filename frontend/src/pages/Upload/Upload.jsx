@@ -69,7 +69,7 @@ export default function Upload() {
 
   const handleFileDrop = async (file) => {
     setSelectedFile(file[0]);
-    setFileName(file[0].path);
+    setFileName(file[0].name);
   };
 
   const handlePost = async () => {
