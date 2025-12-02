@@ -36,15 +36,13 @@ given moment in time, we may have files resembling:
 <pre>
 /tmp
 ├── 6972b2be-cf9b-uuid
-│   └── 2025-12-02T01:02:03
-│       └── of-5
-│           ├── 1
-│           ├── 3
-│           └── 4
+│   └── of-5
+│       ├── 1
+│       ├── 3
+│       └── 4
 └── d44b5d5c-cf9b-uuid
-    └── 2025-12-02T02:03:04
-        └── of-2
-            └── 1
+    └── of-2
+        └── 1
 </pre>
 
 This indicates that two uploads of particular `fileID` values are "in flight".

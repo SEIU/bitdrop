@@ -21,12 +21,11 @@ app.add_middleware(
 )
 
 
-class Upload(BaseModel):
+class CompleteUpload(BaseModel):
+    fileID: uuid.UUID
+    iv: str
     email: EmailStr
-    id: uuid.UUID
-    raw_hash: str
     filename: str
-    base64_content: str
     message: str = "Someone has shared a file with you on SEIU BitDrop!"
     unit_test: bool = False
 
@@ -34,12 +33,11 @@ class Upload(BaseModel):
 class Captcha(BaseModel):
     recaptchaToken: str
 
+
 class Chunk(BaseModel):
-    fileId: uuid.UUID
+    fileID: uuid.UUID
     chunkIndex: int
     totalChunks: int
-    fileName: str
-    iv: str
     encryptedData: str
 
 
@@ -54,25 +52,89 @@ def authenticate(token: Captcha) -> JSONResponse:
     _ = token  # Placeholder for actual authentication logic
     return JSONResponse(content=True)
 
-@app.post("/upload-chunk/")
-def upload_chunk(chunk: Chunk) -> JSONResponse:
+
+@app.post("/upload-chunk")
+async def upload_chunk(chunk: Chunk) -> JSONResponse:
     "Store the chunk of the file"
-    _ = chunk  # Placeholder for actual chunk storage logic
+    if chunk.chunkIndex <= 0 or chunk.totalChunks <= 0:
+        return JSONResponse(
+            content={"message": "chunkIndex and totalChunks must be natural numbers"},
+            status_code=400,
+        )
+    elif chunk.chunkIndex > chunk.totalChunks:
+        return JSONResponse(
+            content={
+                "message": (
+                    f"chunkIndex was {chunk.chunkIndex}, "
+                    f"but totalChunks is only {chunk.totalChunks}"
+                )
+            },
+            status_code=400,
+        )
+
+    save_dir = Path("/tmp") / str(chunk.fileID)
+    save_dir.mkdir(parents=True, exist_ok=True)
+    chunks_dir = save_dir / f"of-{chunk.totalChunks}"
+    chunks_dir.mkdir(parents=True, exist_ok=True)
+
+    # See what's already been saved, and check for duplicates
+    saved_chunks = set(chunks_dir.glob("*"))
+    if {f"{chunk.chunkIndex}", "0"} & saved_chunks:
+        # Having a chunk zero is a sentinel that something went wrong
+        (chunks_dir / "0").touch()
+        return JSONResponse(
+            content={
+                "message": f"Upload {chunk.fileID} contains duplicate chunkIndex values"
+            },
+            status_code=400,
+        )
+
+    # This is the happy path to save the chunk
+    Path(chunks_dir / f"{chunk.chunkIndex}").write_text(chunk.encryptedData)
     return JSONResponse(content={"message": "Chunk uploaded successfully"})
 
 
-@app.post("/upload/")
+@app.post("/complete-upload")
 async def upload_file(
-    body: Upload,
+    body: CompleteUpload,
 ) -> JSONResponse:
-    "Store the uploaded base64 string and send an email"
+    "Complete upload of chunks and send an email"
+    save_dir = Path("/tmp") / str(body.fileID)
 
-    # Store the data
+    # Check for things that could be wrong with the upload
+    if not save_dir.exists():
+        return JSONResponse(
+            content={"message": f"No upload found for {body.fileID}"}, status_code=404
+        )
+    chunks_dir = list(save_dir.glob(f"of-*"))
+    if not len(chunks_dir) == 1:
+        return JSONResponse(
+            content={"message": f"Corrupted upload found for {body.fileID}"},
+            status_code=404,
+        )
+    count = int(chunks_dir[0].name.replace("of-", ""))
+    expected_chunks = set(str(n) for n in range(1, count + 1))
+    found_chunks = set(chunks_dir[0].glob("*"))
+    if found_chunks != expected_chunks:
+        return JSONResponse(
+            content={
+                "message": "Not all encrypted chunks are available",
+                "totalChunks": count,
+                "available": sorted(found_chunks),
+            },
+            status_code=409,
+        )
+
+    #--- Move the chunks to the uploads directory ---
+    # First create needed directories and move data there
     ts = datetime.now().isoformat(timespec="seconds")
-    fname = Path.home() / f"uploads" / ts / str(body.id) / body.raw_hash / body.filename
-    fname.parent.mkdir(parents=True, exist_ok=True)
-    with open(fname, "w") as f:
-        f.write(body.base64_content)
+    file_dir = Path.home() / "uploads" / ts / str(body.fileID) / body.iv / body.filename
+    file_dir.mkdir(parents=True, exist_ok=False)
+    # Probably a faster way to do this with shutil.move(); easier to debug this way
+    for chunk in save_dir.glob("of-*/*"):
+        content = Path(chunk).read_text()
+        Path(file_dir / Path(chunk).name).write_text(content)
+    shutil.rmtree(save_dir)
 
     # Send the email
     response = None  # Re-bound when sending email
@@ -80,7 +142,7 @@ async def upload_file(
         ses_client = boto3.client("ses", region_name="us-west-2")
         email_body = (
             f"{body.message}\n\nDownload the file {body.filename} "
-            f"from {bitdrop}/verify?id={body.id}"
+            f"from {bitdrop}/verify?id={body.fileID}"
         )
         msg = {
             "Source": "bitdrop@mail.dsa.seiu.org",
@@ -99,7 +161,7 @@ async def upload_file(
 
     return JSONResponse(
         content={
-            "id": str(body.id),
+            "fileID": str(body.fileID),
             "filename": body.filename,
             "timestamp": ts,
             "MessageId": None if not response else response.get("MessageId"),
@@ -107,42 +169,46 @@ async def upload_file(
     )
 
 
-@app.get("/download/{id}")
-def download_file(id: str) -> JSONResponse:
+@app.get("/download/{fileID}")
+def download_file(fileID: str) -> JSONResponse:
     "Download a file by its ID token"
     uploads_dir = Path.home() / "uploads"
 
-    matches = list(uploads_dir.glob(f"*/{id}/*/*"))
+    matches = list(uploads_dir.glob(f"*/{fileID}/*/*"))
     if not matches:
         return JSONResponse(
-            content={"message": f"No file found with ID {id}"}, status_code=404
+            content={"message": f"No file found with ID {fileID}"}, status_code=404
         )
     elif len(matches) > 1:
         return JSONResponse(
-            content={"message": f"Multiple files found with ID {id}"}, status_code=409
+            content={"message": f"Multiple files found with ID {fileID}"}, status_code=409
         )
     else:
-        file = matches[0]
-        *_, raw_hash, filename = file.parts
-        base64_content = file.read_text()
+        file_dir = matches[0]
+        chunks = []
+        for chunk in sorted(file_dir.glob("*")):
+            chunks.append(Path(chunk).read_text())
+
+        *_, iv, filename = file_dir.parts
         return JSONResponse(
             content={
                 "filename": f"{filename}",
-                "raw_hash": f"{raw_hash}",
-                "base64_content": base64_content,
+                "iv": f"{iv}",
+                "totalChunks": len(chunks),
+                "chunks": chunks,
             }
         )
 
 
-@app.delete("/download/{id}/{raw_hash}")
-def delete_file(id: str, raw_hash: str) -> JSONResponse:
-    "Delete a file by its ID and raw hash"
+@app.delete("/download/{fileID}/{iv}")
+def delete_file(fileID: str, iv: str) -> JSONResponse:
+    "Delete a file by its fileID and iv"
     uploads_dir = Path.home() / "uploads"
 
-    matches = list(uploads_dir.glob(f"*/{id}/{raw_hash}/*"))
+    matches = list(uploads_dir.glob(f"*/{fileID}/{iv}/*"))
     if not matches:
         return JSONResponse(
-            content={"message": f"No file found with ID {id} and hash {raw_hash}"},
+            content={"message": f"No file found with ID {fileID} and IV {iv}"},
             status_code=404,
         )
     else:
@@ -151,5 +217,5 @@ def delete_file(id: str, raw_hash: str) -> JSONResponse:
             shutil.rmtree(ts_dir)
 
         return JSONResponse(
-            content={"message": f"File with ID {id} and hash {raw_hash} deleted"}
+            content={"message": f"File with ID {fileID} and hash {iv} deleted"}
         )
