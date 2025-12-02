@@ -175,7 +175,12 @@ If the file exists, return a 200 status. The body will resemble:
 {
     "filename": "secret-membership-data.csv",
     "iv": "sha256-hash",
-    "base64_content": "aGVsbG8gd29ybGQK..."
+    "totalChunks": 3,
+    "chunks": [
+        "cGV0LXBhaXJzLWV2aWRlbmNlLXBlbgo=",
+        "Y3V0ZSBraXR0ZW4K",
+        "Y2hhbWJlcnMtY2Fycmllc"
+    ]
 }
 ```
 
