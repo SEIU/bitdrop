@@ -137,7 +137,7 @@ export default function Upload() {
         if (attempt > 0) {
           await new Promise((resolve) => setTimeout(resolve, delay));
         }
-        response = await api.post(`/upload/complete-upload`, finalBody);
+        response = await api.post(`/complete-upload`, finalBody);
         if (!response.error) {
           console.log("File posted successfully:", response.data);
           setPostIsSuccessful(true);
