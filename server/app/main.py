@@ -114,7 +114,7 @@ async def upload_file(
         )
     count = int(chunks_dir[0].name.replace("of-", ""))
     expected_chunks = set(str(n) for n in range(1, count + 1))
-    found_chunks = set(chunks_dir[0].glob("*"))
+    found_chunks = set(chunk.name for chunk in chunks_dir[0].glob("*"))
     if found_chunks != expected_chunks:
         return JSONResponse(
             content={
