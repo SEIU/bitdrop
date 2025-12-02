@@ -10,6 +10,7 @@ import {
   createToken,
   createFileHash,
   uploadChunkedFile,
+  getIV,
 } from "../../utils";
 import {
   Container,
@@ -39,7 +40,7 @@ export default function Upload() {
   const [postIsSuccessful, setPostIsSuccessful] = useState(false);
   const [alertMessage, setAlertMessage] = useState(null);
   const [captchaReady, setCaptchaReady] = useState(false);
-  const [navId, setNavId] = useState("");
+  const [fileId, setFileId] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatusMessage, setUploadStatusMessage] =
     useState("Ready to upload.");
@@ -76,7 +77,7 @@ export default function Upload() {
     setLoading(true);
     setAlertMessage(null);
     let id = createToken();
-    setNavId(id);
+    setFileId(id);
 
     try {
       // verify humanity
@@ -109,23 +110,49 @@ export default function Upload() {
 
       if (!isSuccess) {
         throw new Error("Chunked upload failed. Check console for details.");
+      } else {
+        handleUploadCompletion();
       }
-
-      // post final metadata
-      updateMessage("Upload complete.");
-      let finalBody = {
-        email: email,
-        id: id,
-        raw_hash: fileHash,
-        filename: fileName,
-      };
-      // this is apparently how it's done
-      const response = await api.post(`/upload/complete-session`, finalBody);
-
-      console.log("File posted successfully:", response.data);
+    } catch (error) {
+      console.error("Error posting file:", error);
       setLoading(false);
-      setPostIsSuccessful(true);
-      setUploadProgress(100);
+      setAlertMessage("There was a problem uploading your file.");
+      // setPostIsSuccessful(true); // XXX FOR DEVS
+    }
+  };
+
+  const handleUploadCompletion = async () => {
+    let finalBody = {
+      email: email,
+      fileId: fileId,
+      iv: getIV(fileHash),
+      filename: fileName,
+    };
+    let response;
+
+    try {
+      // attempt to send final request with retries in case it arrives before the last chunk
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const delay = 1000 * Math.pow(2, attempt);
+        if (attempt > 0) {
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+        response = await api.post(`/upload/complete-upload`, finalBody);
+        if (!response.error) {
+          console.log("File posted successfully:", response.data);
+          setPostIsSuccessful(true);
+          updateMessage("Upload complete.");
+          setUploadProgress(100);
+          setLoading(false);
+          break;
+        }
+      }
+      if (response.error) {
+        console.error("Error posting file:", response);
+        setLoading(false);
+        setAlertMessage("There was a problem uploading your file.");
+        setPostIsSuccessful(false);
+      }
     } catch (error) {
       console.error("Error posting file:", error);
       setLoading(false);
@@ -166,7 +193,7 @@ export default function Upload() {
   };
 
   const goToDownload = () => {
-    navigate(`verify?id=${navId}`);
+    navigate(`verify?id=${fileId}`);
   };
 
   return (
