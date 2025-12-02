@@ -111,7 +111,7 @@ export default function Upload() {
       if (!isSuccess) {
         throw new Error("Chunked upload failed. Check console for details.");
       } else {
-        handleUploadCompletion();
+        handleUploadCompletion(fileHash, id);
       }
     } catch (error) {
       console.error("Error posting file:", error);
@@ -121,10 +121,10 @@ export default function Upload() {
     }
   };
 
-  const handleUploadCompletion = async () => {
+  const handleUploadCompletion = async (fileHash, id) => {
     let finalBody = {
       email: email,
-      fileId: fileId,
+      fileId: id,
       iv: getIV(fileHash),
       filename: fileName,
     };

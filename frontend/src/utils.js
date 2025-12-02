@@ -127,7 +127,7 @@ const encryptAndUploadChunk = async (
   // prepare chunk payload
   const chunkPayload = {
     fileId: fileId,
-    chunkIndex: chunkIndex + 1,
+    chunkIndex: chunkIndex,
     totalChunks: totalChunks,
     encryptedData: arrayBufferToBase64(ciphertext),
   };
@@ -177,7 +177,7 @@ export const uploadChunkedFile = async ({
 
   updateMessage(`Now uploading ${numChunks} parts...`);
 
-  for (let i = 0; i < numChunks; i++) {
+  for (let i = 1; i <= numChunks; i++) {
     // yield to the main thread briefly to prevent UI freezing
     await new Promise((resolve) => setTimeout(resolve, 0));
 
