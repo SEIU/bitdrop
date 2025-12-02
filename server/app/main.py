@@ -141,7 +141,7 @@ async def upload_file(
 
     # Send the email
     response = None  # Re-bound when sending email
-    if not body.unit_test or os.environ.get("BITDROP_NO_EMAIL"):
+    if not body.unit_test and not os.environ.get("BITDROP_NO_EMAIL"):
         ses_client = boto3.client("ses", region_name="us-west-2")
         email_body = (
             f"{body.message}\n\nDownload the file {body.filename} "
