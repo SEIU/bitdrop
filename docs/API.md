@@ -137,7 +137,7 @@ The body of this call will resemble:
 ```json
 {
   "fileId": "168100d2-fdd3-uuid",
-  "iv": "sha256-hash",
+  "fileHash": "sha256-hash",
   "email": "foo@example.com",
   "filename": "cute-kitten.jpg"
 }
@@ -172,7 +172,7 @@ If the file exists, return a 200 status. The body will resemble:
 ```json
 {
     "filename": "secret-membership-data.csv",
-    "iv": "sha256-hash",
+    "fileHash": "sha256-hash",
     "totalChunks": 3,
     "chunks": [
         "cGV0LXBhaXJzLWV2aWRlbmNlLXBlbgo=",
@@ -183,18 +183,19 @@ If the file exists, return a 200 status. The body will resemble:
 ```
 
 The frontend will decide whether the password is acceptable.  This password is
-explicitly never sent to the backend.  We expect that the `iv` will be an
+explicitly never sent to the backend.  We expect that the `fileHash` will be an
 SHA-256 hash of the original uploaded file, but the backend does not enforce
-any contraint on what is used for an IV (initialization vector).
+any contraint. Albeit, the SHA hash is used as on an IV (initialization
+vector).
 
 If the file does not exist, a 404 is returned.
 
-## DELETE download/\<fileId\>/\<iv\>
+## DELETE download/\<fileId\>/\<fileHash\>
 
 As a policy on the frontend, a file will be deleted after successful
 decryption and download.  The frontend *should* call the deletion route under
 that circumstance.
 
-If a file with the specified `fileId` and `iv` exists, a 200 is returned (and
-the file is deleted). If it does not exist, a 404 is returned.
+If a file with the specified `fileId` and `fileHash` exists, a 200 is returned
+(and the file is deleted). If it does not exist, a 404 is returned.
 

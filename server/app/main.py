@@ -23,7 +23,7 @@ app.add_middleware(
 
 class CompleteUpload(BaseModel):
     fileId: uuid.UUID
-    iv: str
+    fileHash: str
     email: EmailStr
     filename: str
     message: str = "Someone has shared a file with you on SEIU BitDrop!"
@@ -125,10 +125,12 @@ async def upload_file(
             status_code=409,
         )
 
-    #--- Move the chunks to the uploads directory ---
+    # --- Move the chunks to the uploads directory ---
     # First create needed directories and move data there
     ts = datetime.now().isoformat(timespec="seconds")
-    file_dir = Path.home() / "uploads" / ts / str(body.fileId) / body.iv / body.filename
+    file_dir = (
+        Path.home() / "uploads" / ts / str(body.fileId) / body.fileHash / body.filename
+    )
     file_dir.mkdir(parents=True, exist_ok=False)
     # Probably a faster way to do this with shutil.move(); easier to debug this way
     for chunk in save_dir.glob("of-*/*"):
@@ -181,7 +183,8 @@ def download_file(fileId: str) -> JSONResponse:
         )
     elif len(matches) > 1:
         return JSONResponse(
-            content={"message": f"Multiple files found with ID {fileId}"}, status_code=409
+            content={"message": f"Multiple files found with ID {fileId}"},
+            status_code=409,
         )
     else:
         file_dir = matches[0]
@@ -189,26 +192,26 @@ def download_file(fileId: str) -> JSONResponse:
         for chunk in sorted(file_dir.glob("*")):
             chunks.append(Path(chunk).read_text())
 
-        *_, iv, filename = file_dir.parts
+        *_, fileHash, filename = file_dir.parts
         return JSONResponse(
             content={
-                "filename": f"{filename}",
-                "iv": f"{iv}",
+                "filename": filename,
+                "fileHash": fileHash,
                 "totalChunks": len(chunks),
                 "chunks": chunks,
             }
         )
 
 
-@app.delete("/download/{fileId}/{iv}")
-def delete_file(fileId: str, iv: str) -> JSONResponse:
-    "Delete a file by its fileId and iv"
+@app.delete("/download/{fileId}/{fileHash}")
+def delete_file(fileId: str, fileHash: str) -> JSONResponse:
+    "Delete a file by its fileId and fileHash"
     uploads_dir = Path.home() / "uploads"
 
-    matches = list(uploads_dir.glob(f"*/{fileId}/{iv}/*"))
+    matches = list(uploads_dir.glob(f"*/{fileId}/{fileHash}/*"))
     if not matches:
         return JSONResponse(
-            content={"message": f"No file found with ID {fileId} and IV {iv}"},
+            content={"message": f"No file found with ID {fileId} and hash {fileHash}"},
             status_code=404,
         )
     else:
@@ -217,5 +220,5 @@ def delete_file(fileId: str, iv: str) -> JSONResponse:
             shutil.rmtree(ts_dir)
 
         return JSONResponse(
-            content={"message": f"File with ID {fileId} and hash {iv} deleted"}
+            content={"message": f"File with ID {fileId} and hash {fileHash} deleted"}
         )
