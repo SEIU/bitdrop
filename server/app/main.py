@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 from pathlib import Path
 import shutil
 import uuid
@@ -140,7 +141,7 @@ async def upload_file(
 
     # Send the email
     response = None  # Re-bound when sending email
-    if not body.unit_test:
+    if not body.unit_test or os.environ.get("BITDROP_NO_EMAIL"):
         ses_client = boto3.client("ses", region_name="us-west-2")
         email_body = (
             f"{body.message}\n\nDownload the file {body.filename} "
@@ -167,6 +168,7 @@ async def upload_file(
             "filename": body.filename,
             "timestamp": ts,
             "MessageId": None if not response else response.get("MessageId"),
+            "link": f"{bitdrop}/verify?id={body.fileId}"
         }
     )
 
