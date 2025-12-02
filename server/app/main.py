@@ -195,8 +195,8 @@ def download_file(fileId: str) -> JSONResponse:
         *_, fileHash, filename = file_dir.parts
         return JSONResponse(
             content={
-                "filename": filename,
-                "fileHash": fileHash,
+                "filename": str(filename),
+                "fileHash": str(fileHash),
                 "totalChunks": len(chunks),
                 "chunks": chunks,
             }
