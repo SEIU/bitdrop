@@ -31,9 +31,34 @@ class Upload(BaseModel):
     unit_test: bool = False
 
 
+class Captcha(BaseModel):
+    recaptchaToken: str
+
+class Chunk(BaseModel):
+    fileId: uuid.UUID
+    chunkIndex: int
+    totalChunks: int
+    fileName: str
+    iv: str
+    encryptedData: str
+
+
 @app.get("/")
 async def root() -> str:
     return "Welcome to SEIU BitDrop!"
+
+
+@app.post("/authentication")
+def authenticate(token: Captcha) -> JSONResponse:
+    "This endpoint is for authentication purposes. It currently doesn't do anything."
+    _ = token  # Placeholder for actual authentication logic
+    return JSONResponse(content=True)
+
+@app.post("/upload-chunk/")
+def upload_chunk(chunk: Chunk) -> JSONResponse:
+    "Store the chunk of the file"
+    _ = chunk  # Placeholder for actual chunk storage logic
+    return JSONResponse(content={"message": "Chunk uploaded successfully"})
 
 
 @app.post("/upload/")
