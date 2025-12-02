@@ -153,11 +153,11 @@ If this condition is not fulfilled, a 4xx status code is returned.
 
 ### Error conditions
 
-* If we have no chunks saved matching the provided `fileID` return a 404
-status code.
+* If we have no chunks saved matching the provided `fileID`, return a 404
+  status code.
 
-* If we have an incomplete collection of chunks pertaining to the `fileID`
-specificed, return a 409 with a body similar to:
+* If we have an incomplete collection of chunks pertaining to the `fileID' ,
+  return a 409 with a body similar to:
 
 ```json
 {
