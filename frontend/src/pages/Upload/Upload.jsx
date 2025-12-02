@@ -51,6 +51,26 @@ export default function Upload() {
   const updateMessage = useCallback((msg) => setUploadStatusMessage(msg), []);
 
   useEffect(() => {
+    let intervalId;
+    const checkRecaptcha = () => {
+      if (typeof grecaptcha !== "undefined" && grecaptcha.ready) {
+        clearInterval(intervalId); // stop polling on success
+        grecaptcha.ready(() => {
+          setCaptchaReady(true);
+          console.log("reCAPTCHA is ready.");
+        });
+      } else {
+        console.warn("reCAPTCHA script not yet available, checking again...");
+      }
+    };
+    intervalId = setInterval(checkRecaptcha, 500);
+    // stop the interval when the component unmounts.
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
+
+  useEffect(() => {
     if (typeof grecaptcha === "undefined" || !grecaptcha.ready) {
       console.error(
         "reCAPTCHA script not found. Ensure it is loaded globally in the host HTML."
@@ -132,7 +152,7 @@ export default function Upload() {
     try {
       // attempt to send final request with retries in case it arrives before the last chunk
       for (let attempt = 0; attempt < 3; attempt++) {
-        const delay = 1000 * Math.pow(2, attempt);
+        const delay = 1000 * Math.pow(3, attempt);
         if (attempt > 0) {
           await new Promise((resolve) => setTimeout(resolve, delay));
         }
