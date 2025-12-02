@@ -140,7 +140,7 @@ The body of this call will resemble:
 {
   "fileID": "168100d2-fdd3-uuid",
   "iv": "sha256-hash",
-  "email": foo@example.com,
+  "email": "foo@example.com",
   "filename": "cute-kitten.jpg"
 }
 ```
