@@ -56,7 +56,6 @@ def authenticate(token: Captcha) -> JSONResponse:
 @app.post("/upload-chunk")
 async def upload_chunk(chunk: Chunk) -> JSONResponse:
     "Store the chunk of the file"
-    print(chunk)  # XXX
     if chunk.chunkIndex <= 0 or chunk.totalChunks <= 0:
         return JSONResponse(
             content={"message": "chunkIndex and totalChunks must be natural numbers"},
