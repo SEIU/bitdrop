@@ -127,7 +127,7 @@ const encryptAndUploadChunk = async (
   // prepare chunk payload
   const chunkPayload = {
     fileId: fileId,
-    chunkIndex: chunkIndex,
+    chunkIndex: chunkIndex + 1,
     totalChunks: totalChunks,
     encryptedData: arrayBufferToBase64(ciphertext),
   };

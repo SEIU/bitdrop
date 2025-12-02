@@ -45,7 +45,7 @@ given moment in time, we may have files resembling:
         └── 1
 </pre>
 
-This indicates that two uploads of particular `fileID` values are "in flight".
+This indicates that two uploads of particular `fileId` values are "in flight".
 In the specific example shown, chunk 2 of 5 for 6972b2be-cf9b-uuid has not yet
 arrived, for whatever reason.
 
@@ -78,7 +78,7 @@ An uploaded chunk is defined by a POST body similar to:
 
 ```json
 {
-  "fileID": "168100d2-fdd3-uuid",
+  "fileId": "168100d2-fdd3-uuid",
   "chunkIndex": 1,
   "totalChunks": 2,
   "encryptedData": "base64-data-here"
@@ -92,14 +92,14 @@ The backend server is responsible for storing the posted bytes associated with
 their id token. These bytes will be deleted after either 24 hours have passed
 or when they have been successfully downloaded once.
 
-The field `fileID` is a UUID that globally uniquely identifies the object
+The field `fileId` is a UUID that globally uniquely identifies the object
 being uploaded.
 
 In the happy case, this route simply returns a 200 status code.
 
 ### Error conditions
 
-A few things can go wrong with uploaded chunks.  Every `fileID` is validated
+A few things can go wrong with uploaded chunks.  Every `fileId` is validated
 as being a UUID.  `chunkIndex` and `totalChunks` are validated as integers.
 `encryptedData` is simply validated as a string, but we expect it to be Base64
 encoded in normal operation.
@@ -118,9 +118,9 @@ encoded in normal operation.
 {"message": "chunkIndex was 12, but totalChunks is only 11"}
 ```
 
-* If the same `chunkIndex` is received (relative to same `fileID`) more than
+* If the same `chunkIndex` is received (relative to same `fileId`) more than
   once, the sequence is invalid, and this and all subsequent uploads with this
-  `fileID` return a 400 status code with a body similar to:
+  `fileId` return a 400 status code with a body similar to:
 
 ```json
 {"message": "Upload 168100d2-fdd3-uuid contains duplicate chunkIndex values"}
@@ -136,14 +136,14 @@ The body of this call will resemble:
 
 ```json
 {
-  "fileID": "168100d2-fdd3-uuid",
+  "fileId": "168100d2-fdd3-uuid",
   "iv": "sha256-hash",
   "email": "foo@example.com",
   "filename": "cute-kitten.jpg"
 }
 ```
 
-If all expected chunks exist for the specified `fileID`, the route returns a
+If all expected chunks exist for the specified `fileId`, the route returns a
 200 after copying the files to their downloadable locations and directory
 hierarchy.
 
@@ -151,10 +151,10 @@ If this condition is not fulfilled, a 4xx status code is returned.
 
 ### Error conditions
 
-* If we have no chunks saved matching the provided `fileID`, return a 404
+* If we have no chunks saved matching the provided `fileId`, return a 404
   status code.
 
-* If we have an incomplete collection of chunks pertaining to the `fileID' ,
+* If we have an incomplete collection of chunks pertaining to the `fileId' ,
   return a 409 with a body similar to:
 
 ```json
@@ -165,7 +165,7 @@ If this condition is not fulfilled, a 4xx status code is returned.
 }
 ```
 
-## GET download/\<fileID\>
+## GET download/\<fileId\>
 
 If the file exists, return a 200 status. The body will resemble:
 
@@ -189,12 +189,12 @@ any contraint on what is used for an IV (initialization vector).
 
 If the file does not exist, a 404 is returned.
 
-## DELETE download/\<fileID\>/\<iv\>
+## DELETE download/\<fileId\>/\<iv\>
 
 As a policy on the frontend, a file will be deleted after successful
 decryption and download.  The frontend *should* call the deletion route under
 that circumstance.
 
-If a file with the specified `fileID` and `iv` exists, a 200 is returned (and
+If a file with the specified `fileId` and `iv` exists, a 200 is returned (and
 the file is deleted). If it does not exist, a 404 is returned.
 

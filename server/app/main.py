@@ -22,7 +22,7 @@ app.add_middleware(
 
 
 class CompleteUpload(BaseModel):
-    fileID: uuid.UUID
+    fileId: uuid.UUID
     iv: str
     email: EmailStr
     filename: str
@@ -35,7 +35,7 @@ class Captcha(BaseModel):
 
 
 class Chunk(BaseModel):
-    fileID: uuid.UUID
+    fileId: uuid.UUID
     chunkIndex: int
     totalChunks: int
     encryptedData: str
@@ -56,6 +56,7 @@ def authenticate(token: Captcha) -> JSONResponse:
 @app.post("/upload-chunk")
 async def upload_chunk(chunk: Chunk) -> JSONResponse:
     "Store the chunk of the file"
+    print(chunk)  # XXX
     if chunk.chunkIndex <= 0 or chunk.totalChunks <= 0:
         return JSONResponse(
             content={"message": "chunkIndex and totalChunks must be natural numbers"},
@@ -72,7 +73,7 @@ async def upload_chunk(chunk: Chunk) -> JSONResponse:
             status_code=400,
         )
 
-    save_dir = Path("/tmp") / str(chunk.fileID)
+    save_dir = Path("/tmp") / str(chunk.fileId)
     save_dir.mkdir(parents=True, exist_ok=True)
     chunks_dir = save_dir / f"of-{chunk.totalChunks}"
     chunks_dir.mkdir(parents=True, exist_ok=True)
@@ -84,7 +85,7 @@ async def upload_chunk(chunk: Chunk) -> JSONResponse:
         (chunks_dir / "0").touch()
         return JSONResponse(
             content={
-                "message": f"Upload {chunk.fileID} contains duplicate chunkIndex values"
+                "message": f"Upload {chunk.fileId} contains duplicate chunkIndex values"
             },
             status_code=400,
         )
@@ -99,17 +100,17 @@ async def upload_file(
     body: CompleteUpload,
 ) -> JSONResponse:
     "Complete upload of chunks and send an email"
-    save_dir = Path("/tmp") / str(body.fileID)
+    save_dir = Path("/tmp") / str(body.fileId)
 
     # Check for things that could be wrong with the upload
     if not save_dir.exists():
         return JSONResponse(
-            content={"message": f"No upload found for {body.fileID}"}, status_code=404
+            content={"message": f"No upload found for {body.fileId}"}, status_code=404
         )
     chunks_dir = list(save_dir.glob(f"of-*"))
     if not len(chunks_dir) == 1:
         return JSONResponse(
-            content={"message": f"Corrupted upload found for {body.fileID}"},
+            content={"message": f"Corrupted upload found for {body.fileId}"},
             status_code=404,
         )
     count = int(chunks_dir[0].name.replace("of-", ""))
@@ -128,7 +129,7 @@ async def upload_file(
     #--- Move the chunks to the uploads directory ---
     # First create needed directories and move data there
     ts = datetime.now().isoformat(timespec="seconds")
-    file_dir = Path.home() / "uploads" / ts / str(body.fileID) / body.iv / body.filename
+    file_dir = Path.home() / "uploads" / ts / str(body.fileId) / body.iv / body.filename
     file_dir.mkdir(parents=True, exist_ok=False)
     # Probably a faster way to do this with shutil.move(); easier to debug this way
     for chunk in save_dir.glob("of-*/*"):
@@ -142,7 +143,7 @@ async def upload_file(
         ses_client = boto3.client("ses", region_name="us-west-2")
         email_body = (
             f"{body.message}\n\nDownload the file {body.filename} "
-            f"from {bitdrop}/verify?id={body.fileID}"
+            f"from {bitdrop}/verify?id={body.fileId}"
         )
         msg = {
             "Source": "bitdrop@mail.dsa.seiu.org",
@@ -161,7 +162,7 @@ async def upload_file(
 
     return JSONResponse(
         content={
-            "fileID": str(body.fileID),
+            "fileId": str(body.fileId),
             "filename": body.filename,
             "timestamp": ts,
             "MessageId": None if not response else response.get("MessageId"),
@@ -169,19 +170,19 @@ async def upload_file(
     )
 
 
-@app.get("/download/{fileID}")
-def download_file(fileID: str) -> JSONResponse:
+@app.get("/download/{fileId}")
+def download_file(fileId: str) -> JSONResponse:
     "Download a file by its ID token"
     uploads_dir = Path.home() / "uploads"
 
-    matches = list(uploads_dir.glob(f"*/{fileID}/*/*"))
+    matches = list(uploads_dir.glob(f"*/{fileId}/*/*"))
     if not matches:
         return JSONResponse(
-            content={"message": f"No file found with ID {fileID}"}, status_code=404
+            content={"message": f"No file found with ID {fileId}"}, status_code=404
         )
     elif len(matches) > 1:
         return JSONResponse(
-            content={"message": f"Multiple files found with ID {fileID}"}, status_code=409
+            content={"message": f"Multiple files found with ID {fileId}"}, status_code=409
         )
     else:
         file_dir = matches[0]
@@ -200,15 +201,15 @@ def download_file(fileID: str) -> JSONResponse:
         )
 
 
-@app.delete("/download/{fileID}/{iv}")
-def delete_file(fileID: str, iv: str) -> JSONResponse:
-    "Delete a file by its fileID and iv"
+@app.delete("/download/{fileId}/{iv}")
+def delete_file(fileId: str, iv: str) -> JSONResponse:
+    "Delete a file by its fileId and iv"
     uploads_dir = Path.home() / "uploads"
 
-    matches = list(uploads_dir.glob(f"*/{fileID}/{iv}/*"))
+    matches = list(uploads_dir.glob(f"*/{fileId}/{iv}/*"))
     if not matches:
         return JSONResponse(
-            content={"message": f"No file found with ID {fileID} and IV {iv}"},
+            content={"message": f"No file found with ID {fileId} and IV {iv}"},
             status_code=404,
         )
     else:
@@ -217,5 +218,5 @@ def delete_file(fileID: str, iv: str) -> JSONResponse:
             shutil.rmtree(ts_dir)
 
         return JSONResponse(
-            content={"message": f"File with ID {fileID} and hash {iv} deleted"}
+            content={"message": f"File with ID {fileId} and hash {iv} deleted"}
         )
