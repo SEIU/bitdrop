@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
+import requests
 
 bitdrop = "https://b2.seiu.org"
 
@@ -42,6 +43,18 @@ class Chunk(BaseModel):
     encryptedData: str
 
 
+def verify_recaptcha(response_token, secret_key, remote_ip):
+    url = "https://www.google.com/recaptcha/api/siteverify"
+    data = {
+        'secret': secret_key,
+        'response': response_token,
+        'remoteip': remote_ip
+    }
+    response = requests.post(url, data=data, verify=True)
+    result = response.json()
+    return result.get("success", False)
+
+
 @app.get("/")
 async def root() -> str:
     return "Welcome to SEIU BitDrop!"
@@ -49,9 +62,10 @@ async def root() -> str:
 
 @app.post("/authentication")
 def authenticate(token: Captcha) -> JSONResponse:
-    "This endpoint is for authentication purposes. It currently doesn't do anything."
-    _ = token  # Placeholder for actual authentication logic
-    return JSONResponse(content=True)
+    "This endpoint is for authentication purposes."
+    verified = verify_recaptcha(token, os.getenv("RECAPTCHA_SECRET_KEY"), "127.0.0.1")
+    verified = True
+    return JSONResponse(content=verified)
 
 
 @app.post("/upload-chunk")
