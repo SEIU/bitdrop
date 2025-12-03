@@ -43,11 +43,11 @@ class Chunk(BaseModel):
     encryptedData: str
 
 
-def verify_recaptcha(response_token, secret_key, remote_ip):
+def verify_recaptcha(token, secret_key, remote_ip=None):
     url = "https://www.google.com/recaptcha/api/siteverify"
     data = {
         'secret': secret_key,
-        'response': response_token,
+        'response': token.recaptchaToken,
         'remoteip': remote_ip
     }
     response = requests.post(url, data=data, verify=True)
@@ -61,10 +61,9 @@ async def root() -> str:
 
 
 @app.post("/authentication")
-def authenticate(token: Captcha) -> JSONResponse:
+def authentication(token: Captcha) -> JSONResponse:
     "This endpoint is for authentication purposes."
-    verified = verify_recaptcha(token, os.getenv("RECAPTCHA_SECRET_KEY"), "127.0.0.1")
-    verified = True
+    verified = verify_recaptcha(token, os.getenv("RECAPTCHA_SECRET_KEY"))
     return JSONResponse(content=verified)
 
 
