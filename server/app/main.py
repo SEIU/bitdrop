@@ -5,13 +5,15 @@ import shutil
 import uuid
 
 import boto3
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, EmailStr
 import requests
 
-bitdrop = "https://b2.seiu.org"
+load_dotenv() 
+bitdrop = os.getenv("BITDROP_SERVER")
 
 app = FastAPI()
 app.add_middleware(

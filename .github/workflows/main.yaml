@@ -18,8 +18,10 @@ jobs:
       - name: Add secrets to repository checkout
         env:
           environment: ${{ secrets.ENVIRONMENT }}
+          recaptcha: ${{ secrets.RECAPTCHA }}
         run: |
           echo "${environment}" > $PWD/frontend/.env
+          echo "${recaptcha}" > $PWD/server/.env
 
       - name: Run backend tests
         run: |
