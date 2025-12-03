@@ -31,25 +31,31 @@ export default function Download() {
   const handleDownload = async () => {
     let id = searchParams.get("id");
     let url = `/download/${id}`;
-    let hash;
 
     try {
       const response = await api.get(url);
-      hash = response.data.raw_hash;
-      let plainTextBlob = await decryptFile(
-        response.data.base64_content,
-        password,
-        response.data.raw_hash
-      );
-      downloadBlob(plainTextBlob, response.data.filename);
-      await deleteFile(id, hash);
-      setDownloadDisabled(true);
+      if (!response.error) {
+        let encrytedFile = "";
+        response.data.chunks.forEach((chunk) => {
+          encrytedFile += chunk;
+        });
+        let plainTextBlob = await decryptFile(
+          encrytedFile,
+          password,
+          response.data.fileHash
+        );
+        downloadBlob(plainTextBlob, response.data.filename);
+        await deleteFile(id, response.data.fileHash);
+        setDownloadDisabled(true);
+      } else {
+        // handle error TODO
+      }
     } catch (err) {
       if (err.response?.status === 404) {
         setAlertMessage(err.response.data.message);
       } else {
         setAlertMessage(
-          "There was a problem decrypting this file. Make sure you have the correct password for this asset."
+          "There was a problem downloading this file. Make sure you have the correct password for this asset."
         );
       }
       console.error("Error downloading file:", err);
