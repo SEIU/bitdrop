@@ -91,12 +91,18 @@ async def upload_chunk(chunk: Chunk) -> JSONResponse:
         )
 
     # This is the happy path to save the chunk
-    Path(chunks_dir / f"{chunk.chunkIndex}").write_text(chunk.encryptedData)
-    return JSONResponse(content={"message": "Chunk uploaded successfully"})
+    current_chunk = Path(chunks_dir) / f"{chunk.chunkIndex}"
+    current_chunk.write_text(chunk.encryptedData)
+    return JSONResponse(
+        content={
+            "message": "Chunk uploaded successfully",
+            "chunk_file": str(current_chunk),
+        }
+    )
 
 
 @app.post("/complete-upload")
-async def upload_file(
+async def complete_upload(
     body: CompleteUpload,
 ) -> JSONResponse:
     "Complete upload of chunks and send an email"
@@ -168,7 +174,7 @@ async def upload_file(
             "filename": body.filename,
             "timestamp": ts,
             "MessageId": None if not response else response.get("MessageId"),
-            "link": f"{bitdrop}/verify?id={body.fileId}"
+            "link": f"/verify?id={body.fileId}",
         }
     )
 

@@ -56,7 +56,7 @@ arrived, for whatever reason.
 A route purely for testing that a server is running. Returns a simple welcome
 message.
 
-## POST authenticate
+## POST authentication
 
 The frontend will send a Google recaptcha token for the backend to verify.
 
