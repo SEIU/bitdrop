@@ -31,6 +31,8 @@ export const createToken = () => {
   return window.crypto.randomUUID();
 };
 
+// calculate SHA-256 hash of the first 512 KB of the file
+// used to create salt and iv
 export const createFileHash = (file) => {
   if (!file) return Promise.resolve(null);
 
@@ -38,7 +40,6 @@ export const createFileHash = (file) => {
     try {
       const crypto = window.crypto.subtle;
       const reader = new FileReader();
-
       // hash the first 512KB to avoid memory issues for large files,
       // while still providing a unique-enough ID for the key salt.
       const chunkToHash = file.slice(0, 512 * 1024);
@@ -61,6 +62,7 @@ export const createFileHash = (file) => {
   });
 };
 
+// converts hexidecimal string into byte array
 const hexToBytes = (hex) => {
   const bytes = [];
   for (let i = 0; i < hex.length; i += 2) {
@@ -71,13 +73,10 @@ const hexToBytes = (hex) => {
 
 // convert ArrayBuffer to Base64 string for storage/transmission
 const arrayBufferToBase64 = (buffer) => {
-  // Use Blob and FileReader, which are designed to handle binary data safely.
   return new Promise((resolve, reject) => {
     const blob = new Blob([buffer], { type: "application/octet-stream" });
     const reader = new FileReader();
     reader.onload = () => {
-      // The result is a data URL (e.g., 'data:application/octet-stream;base64,AAAA...').
-      // Extract only the Base64 part.
       const base64String = reader.result.split(",")[1];
       resolve(base64String);
     };
@@ -88,13 +87,8 @@ const arrayBufferToBase64 = (buffer) => {
 
 // convert Base64 string back to ArrayBuffer for crypto operations
 const base64ToArrayBuffer = async (base64) => {
-  // Construct a Data URL with the raw binary MIME type
   const dataUrl = `data:application/octet-stream;base64,${base64}`;
-
-  // Fetch the data from the Data URL
   const response = await fetch(dataUrl);
-
-  // Return the raw binary data as an ArrayBuffer
   return response.arrayBuffer();
 };
 
@@ -208,7 +202,8 @@ export const uploadChunkedFile = async ({
     );
 
     if (result) {
-      currentIV = result;
+      // this should be last 16 bytes of successfully uploaded chunk
+      currentIV = result; // assign it to the new iv for the next chunk
     } else {
       throw new Error(
         `Upload failed at chunk ${i}/${numChunks}. See console for details.`
@@ -249,16 +244,28 @@ export const decryptFile = async (chunks, password, hash) => {
 
   for (let i = 0; i < chunks.length; i++) {
     let encryptedBuffer = await base64ToArrayBuffer(chunks[i]);
-    let decryptedChunk = await window.crypto.subtle.decrypt(
-      { name: "AES-CBC", iv: currentIV },
-      key,
-      encryptedBuffer
-    );
+    let decryptedChunk;
+    try {
+      decryptedChunk = await window.crypto.subtle.decrypt(
+        { name: "AES-CBC", iv: currentIV },
+        key,
+        encryptedBuffer
+      );
+    } catch (err) {
+      console.error(
+        `Decryption failed at chunk ${i + 1}/${chunks.length}.`,
+        err
+      );
+      throw new Error(
+        "Decryption failed. Please check your password or ensure the file is not corrupted."
+      );
+    }
     plainTextChunks.push(decryptedChunk);
-    const encryptedView = new Uint8Array(encryptedBuffer);
-    currentIV = encryptedView.slice(
-      encryptedView.length - 16,
-      encryptedView.length
+    // derive and assign the iv for the next chunk's decryption.
+    const encryptedArray = new Uint8Array(encryptedBuffer);
+    currentIV = encryptedArray.slice(
+      encryptedArray.length - 16,
+      encryptedArray.length
     );
   }
 
