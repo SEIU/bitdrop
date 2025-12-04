@@ -35,12 +35,8 @@ export default function Download() {
     try {
       const response = await api.get(url);
       if (!response.error) {
-        let encrytedFile = "";
-        response.data.chunks.forEach((chunk) => {
-          encrytedFile += chunk;
-        });
         let plainTextBlob = await decryptFile(
-          encrytedFile,
+          response.data.chunks,
           password,
           response.data.fileHash
         );
@@ -48,17 +44,20 @@ export default function Download() {
         await deleteFile(id, response.data.fileHash);
         setDownloadDisabled(true);
       } else {
-        // handle error TODO
+        console.error("Error downloading file:", response);
+        setAlertMessage(
+          "There was a problem downloading this file. Make sure you have the correct password for this asset."
+        );
       }
     } catch (err) {
       if (err.response?.status === 404) {
         setAlertMessage(err.response.data.message);
       } else {
         setAlertMessage(
-          "There was a problem downloading this file. Make sure you have the correct password for this asset."
+          "There was a problem decrypting this file. Make sure you have the correct password for this asset."
         );
       }
-      console.error("Error downloading file:", err);
+      console.error("Error decrypting file:", err);
     }
   };
 

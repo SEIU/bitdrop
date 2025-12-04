@@ -71,31 +71,45 @@ const hexToBytes = (hex) => {
 
 // convert ArrayBuffer to Base64 string for storage/transmission
 const arrayBufferToBase64 = (buffer) => {
-  // create intermediate binary string
-  let binary = "";
-  const bytes = new Uint8Array(buffer);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
+  // Use Blob and FileReader, which are designed to handle binary data safely.
+  return new Promise((resolve, reject) => {
+    const blob = new Blob([buffer], { type: "application/octet-stream" });
+    const reader = new FileReader();
+    reader.onload = () => {
+      // The result is a data URL (e.g., 'data:application/octet-stream;base64,AAAA...').
+      // Extract only the Base64 part.
+      const base64String = reader.result.split(",")[1];
+      resolve(base64String);
+    };
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(blob);
+  });
 };
 
 // convert Base64 string back to ArrayBuffer for crypto operations
-const base64ToArrayBuffer = (base64) => {
-  const binary_string = atob(base64);
-  const len = binary_string.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binary_string.charCodeAt(i);
-  }
-  return bytes.buffer;
+const base64ToArrayBuffer = async (base64) => {
+  // Construct a Data URL with the raw binary MIME type
+  const dataUrl = `data:application/octet-stream;base64,${base64}`;
+
+  // Fetch the data from the Data URL
+  const response = await fetch(dataUrl);
+
+  // Return the raw binary data as an ArrayBuffer
+  return response.arrayBuffer();
 };
 
 export const getIV = (hash) => {
-  const ivHex = hash.slice(0, 32);
+  // Use the SECOND 16 bytes (index 32 to 64) for the IV
+  const ivHex = hash.slice(32, 64);
   const iv = hexToBytes(ivHex);
-  return iv;
+  return iv; // Uint8Array of length 16
+};
+
+const getLast16Bytes = (ciphertextBuffer) => {
+  const encryptedView = new Uint8Array(ciphertextBuffer);
+  const startIndex = encryptedView.length - 16;
+  const last16Bytes = encryptedView.slice(startIndex, encryptedView.length);
+  return last16Bytes;
 };
 
 // encrypts a single file chunk and upload with retries/exponential backoff
@@ -105,10 +119,8 @@ const encryptAndUploadChunk = async (
   fileId,
   chunkIndex,
   totalChunks,
-  hash
+  iv
 ) => {
-  const iv = getIV(hash);
-
   // read the chunk into an ArrayBuffer
   const chunkBuffer = await new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -129,7 +141,7 @@ const encryptAndUploadChunk = async (
     fileId: fileId,
     chunkIndex: chunkIndex,
     totalChunks: totalChunks,
-    encryptedData: arrayBufferToBase64(ciphertext),
+    encryptedData: await arrayBufferToBase64(ciphertext),
   };
 
   // upload with retries
@@ -141,7 +153,7 @@ const encryptAndUploadChunk = async (
 
     try {
       await api.post(`/upload-chunk`, chunkPayload);
-      return true;
+      return getLast16Bytes(ciphertext);
     } catch (error) {
       console.error(
         `[Chunk ${chunkIndex}] Upload failed on attempt ${attempt + 1}:`,
@@ -177,6 +189,8 @@ export const uploadChunkedFile = async ({
 
   updateMessage(`Now uploading ${numChunks} parts...`);
 
+  let currentIV = getIV(fileHash);
+
   for (let i = 1; i <= numChunks; i++) {
     // yield to the main thread briefly to prevent UI freezing
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -184,18 +198,20 @@ export const uploadChunkedFile = async ({
     const end = Math.min(offset + CHUNK_SIZE, totalSize);
     const chunk = selectedFile.slice(offset, end);
 
-    const success = await encryptAndUploadChunk(
+    const result = await encryptAndUploadChunk(
       chunk,
       key,
       id,
       i,
       numChunks,
-      fileHash
+      currentIV
     );
 
-    if (!success) {
+    if (result) {
+      currentIV = result;
+    } else {
       throw new Error(
-        `Upload failed at chunk ${i + 1}/${numChunks}. See console for details.`
+        `Upload failed at chunk ${i}/${numChunks}. See console for details.`
       );
     }
 
@@ -212,29 +228,45 @@ export const uploadChunkedFile = async ({
   return true;
 };
 
-export const decryptFile = async (base64_content, password, hash) => {
-  const iv = getIV(hash);
-  const key = await deriveKeyFromPassword(password, iv);
-
-  let contentArrayBuffer = base64ToArrayBuffer(base64_content);
-
-  // --- Decryption ---
-  try {
-    let decrypted = await window.crypto.subtle.decrypt(
-      { name: "AES-CBC", iv },
-      key,
-      contentArrayBuffer
-    );
-
-    const plaintextBlob = new Blob([decrypted], {
-      type: "application/octet-stream",
-    });
-    return plaintextBlob;
-  } catch (error) {
-    // TODO handle error messaging for user
-    console.error("Decryption Failed", error);
-    throw new Error("Decryption failed.");
+const reassembleChunks = (chunks) => {
+  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.byteLength, 0);
+  const finalArray = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    const chunkView = new Uint8Array(chunk);
+    finalArray.set(chunkView, offset);
+    offset += chunk.byteLength;
   }
+  return finalArray.buffer;
+};
+
+export const decryptFile = async (chunks, password, hash) => {
+  const saltHex = hash.slice(0, 32);
+  const salt = hexToBytes(saltHex);
+  const key = await deriveKeyFromPassword(password, salt);
+  let plainTextChunks = [];
+  let currentIV = getIV(hash);
+
+  for (let i = 0; i < chunks.length; i++) {
+    let encryptedBuffer = await base64ToArrayBuffer(chunks[i]);
+    let decryptedChunk = await window.crypto.subtle.decrypt(
+      { name: "AES-CBC", iv: currentIV },
+      key,
+      encryptedBuffer
+    );
+    plainTextChunks.push(decryptedChunk);
+    const encryptedView = new Uint8Array(encryptedBuffer);
+    currentIV = encryptedView.slice(
+      encryptedView.length - 16,
+      encryptedView.length
+    );
+  }
+
+  const finalPlaintextBuffer = reassembleChunks(plainTextChunks);
+  const plaintextBlob = new Blob([finalPlaintextBuffer], {
+    type: "application/octet-stream",
+  });
+  return plaintextBlob;
 };
 
 async function deriveKeyFromPassword(password, salt) {
