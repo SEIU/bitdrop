@@ -62,6 +62,17 @@ export const createFileHash = (file) => {
   });
 };
 
+const generateNonce = () => {
+  return window.crypto.getRandomValues(new Uint8Array(12));
+};
+
+const concatBuffers = (buffer1, buffer2) => {
+  const tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+  tmp.set(new Uint8Array(buffer1), 0);
+  tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+  return tmp.buffer;
+};
+
 // converts hexidecimal string into byte array
 const hexToBytes = (hex) => {
   const bytes = [];
@@ -112,9 +123,10 @@ const encryptAndUploadChunk = async (
   key,
   fileId,
   chunkIndex,
-  totalChunks,
-  iv
+  totalChunks
 ) => {
+  const nonce = generateNonce();
+
   // read the chunk into an ArrayBuffer
   const chunkBuffer = await new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -125,17 +137,19 @@ const encryptAndUploadChunk = async (
 
   // encrypt the chunk
   const ciphertext = await window.crypto.subtle.encrypt(
-    { name: "AES-CBC", iv: iv },
+    { name: "AES-GCM", iv: nonce },
     key,
     chunkBuffer
   );
+
+  const fullEncryptedData = concatBuffers(nonce.buffer, ciphertext);
 
   // prepare chunk payload
   const chunkPayload = {
     fileId: fileId,
     chunkIndex: chunkIndex,
     totalChunks: totalChunks,
-    encryptedData: await arrayBufferToBase64(ciphertext),
+    encryptedData: await arrayBufferToBase64(fullEncryptedData),
   };
 
   // upload with retries
@@ -147,7 +161,7 @@ const encryptAndUploadChunk = async (
 
     try {
       await api.post(`/upload-chunk`, chunkPayload);
-      return getLast16Bytes(ciphertext);
+      return true;
     } catch (error) {
       console.error(
         `[Chunk ${chunkIndex}] Upload failed on attempt ${attempt + 1}:`,
@@ -174,6 +188,7 @@ export const uploadChunkedFile = async ({
 
   const saltHex = fileHash.slice(0, 32);
   const salt = hexToBytes(saltHex);
+  const iv = getIV(fileHash);
 
   // create encryption key
   const key = await deriveKeyFromPassword(password, salt);
@@ -182,8 +197,6 @@ export const uploadChunkedFile = async ({
   let successfulChunks = 0;
 
   updateMessage(`Now uploading ${numChunks} parts...`);
-
-  let currentIV = getIV(fileHash);
 
   for (let i = 1; i <= numChunks; i++) {
     // yield to the main thread briefly to prevent UI freezing
@@ -198,13 +211,10 @@ export const uploadChunkedFile = async ({
       id,
       i,
       numChunks,
-      currentIV
+      iv
     );
 
-    if (result) {
-      // this should be last 16 bytes of successfully uploaded chunk
-      currentIV = result; // assign it to the new iv for the next chunk
-    } else {
+    if (!result) {
       throw new Error(
         `Upload failed at chunk ${i}/${numChunks}. See console for details.`
       );
@@ -240,16 +250,19 @@ export const decryptFile = async (chunks, password, hash) => {
   const salt = hexToBytes(saltHex);
   const key = await deriveKeyFromPassword(password, salt);
   let plainTextChunks = [];
-  let currentIV = getIV(hash);
 
   for (let i = 0; i < chunks.length; i++) {
     let encryptedBuffer = await base64ToArrayBuffer(chunks[i]);
     let decryptedChunk;
+    const nonce = encryptedBuffer.slice(0, 12);
+    const ciphertextWithTag = encryptedBuffer.slice(12);
+    console.log("foo ", nonce.byteLength);
+
     try {
       decryptedChunk = await window.crypto.subtle.decrypt(
-        { name: "AES-CBC", iv: currentIV },
+        { name: "AES-GCM", iv: nonce },
         key,
-        encryptedBuffer
+        ciphertextWithTag
       );
     } catch (err) {
       console.error(
@@ -261,39 +274,11 @@ export const decryptFile = async (chunks, password, hash) => {
       );
     }
     plainTextChunks.push(decryptedChunk);
-    // derive and assign the iv for the next chunk's decryption.
-    const encryptedArray = new Uint8Array(encryptedBuffer);
-    currentIV = encryptedArray.slice(
-      encryptedArray.length - 16,
-      encryptedArray.length
-    );
   }
 
-  const finalPlaintextBuffer = reassembleChunks(plainTextChunks);
+  const plaintextBuffer = reassembleChunks(plainTextChunks);
 
-  const BOM = [0xef, 0xbb, 0xbf]; // The UTF-8 Byte Order Mark
-
-  // Create a Uint8Array view of the assembled buffer
-  const assembledView = new Uint8Array(finalPlaintextBuffer);
-
-  let finalBufferToUse = finalPlaintextBuffer; // Default to the original buffer
-
-  // Check if the first three bytes match the BOM
-  if (
-    assembledView.byteLength >= 3 &&
-    assembledView[0] === BOM[0] &&
-    assembledView[1] === BOM[1] &&
-    assembledView[2] === BOM[2]
-  ) {
-    console.log("BOM detected and safely stripped from file header.");
-
-    // Create a new ArrayBuffer that is 3 bytes shorter, starting from index 3
-    finalBufferToUse = assembledView.buffer.slice(3);
-
-    // NOTE: .slice(3) on an ArrayBuffer returns a new buffer starting at index 3.
-  }
-
-  const plaintextBlob = new Blob([finalBufferToUse], {
+  const plaintextBlob = new Blob([plaintextBuffer], {
     type: "application/octet-stream",
   });
   return plaintextBlob;
@@ -316,7 +301,7 @@ async function deriveKeyFromPassword(password, salt) {
       hash: "SHA-256",
     },
     passwordKey,
-    { name: "AES-CBC", length: 256 },
+    { name: "AES-GCM", length: 256 },
     true,
     ["encrypt", "decrypt"]
   );
