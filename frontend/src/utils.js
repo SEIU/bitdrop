@@ -270,7 +270,30 @@ export const decryptFile = async (chunks, password, hash) => {
   }
 
   const finalPlaintextBuffer = reassembleChunks(plainTextChunks);
-  const plaintextBlob = new Blob([finalPlaintextBuffer], {
+
+  const BOM = [0xef, 0xbb, 0xbf]; // The UTF-8 Byte Order Mark
+
+  // Create a Uint8Array view of the assembled buffer
+  const assembledView = new Uint8Array(finalPlaintextBuffer);
+
+  let finalBufferToUse = finalPlaintextBuffer; // Default to the original buffer
+
+  // Check if the first three bytes match the BOM
+  if (
+    assembledView.byteLength >= 3 &&
+    assembledView[0] === BOM[0] &&
+    assembledView[1] === BOM[1] &&
+    assembledView[2] === BOM[2]
+  ) {
+    console.log("BOM detected and safely stripped from file header.");
+
+    // Create a new ArrayBuffer that is 3 bytes shorter, starting from index 3
+    finalBufferToUse = assembledView.buffer.slice(3);
+
+    // NOTE: .slice(3) on an ArrayBuffer returns a new buffer starting at index 3.
+  }
+
+  const plaintextBlob = new Blob([finalBufferToUse], {
     type: "application/octet-stream",
   });
   return plaintextBlob;
