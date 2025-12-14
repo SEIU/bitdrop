@@ -16,3 +16,4 @@ if __name__ == "__main__":
     file_id, file_hash, password = argv[1:]
     result = decrypt(file_id, file_hash, password)
     print(result)
+    (Path.home() / "tmp" / result.filename).write_bytes(result.buffer.getvalue())

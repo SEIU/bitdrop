@@ -256,7 +256,6 @@ export const decryptFile = async (chunks, password, hash) => {
     let decryptedChunk;
     const nonce = encryptedBuffer.slice(0, 12);
     const ciphertextWithTag = encryptedBuffer.slice(12);
-    console.log("foo ", nonce.byteLength);
 
     try {
       decryptedChunk = await window.crypto.subtle.decrypt(

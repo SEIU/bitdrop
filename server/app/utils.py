@@ -1,7 +1,9 @@
 from base64 import b64decode
 from collections import namedtuple
+from hashlib import sha256
 import io
 from pathlib import Path
+
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 from Crypto.Protocol.KDF import PBKDF2
@@ -16,9 +18,9 @@ def derive_key_from_password(password: str, salt: bytes):
     return PBKDF2(pw_bytes, salt, 32, count=300000, hmac_hash_module=SHA256)
 
 
-def decrypt(file_id: str, file_hash: str, password: str) -> Decrypt:
+def decrypt(file_id: str, password: str) -> Decrypt:
     uploads = Path.home() / "uploads"
-    match = list(uploads.glob(f"*/{file_id}/{file_hash}/*"))
+    match = list(uploads.glob(f"*/{file_id}/*/*"))
     if len(match) == 0:
         return Decrypt(
             status="MISSING",
@@ -42,32 +44,34 @@ def decrypt(file_id: str, file_hash: str, password: str) -> Decrypt:
 
     download = match[0]
     timestamp = download.parent.parent.parent.name
+    file_hash = download.parent.name
     chunks = list(download.glob("*"))
 
     salt_hex = file_hash[:32]
     salt = bytes.fromhex(salt_hex)
     key = derive_key_from_password(password, salt)
 
+    plaintext = io.BytesIO()
     for chunk in chunks:
         data = b64decode(chunk.read_text())
-        nonce = data[:32]
-        ciphertext_with_tag = data[32:]
-        try:
-            cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
-            plaintext = cipher.decrypt(ciphertext_with_tag)
-            buff = io.BytesIO(plaintext)
-            print("XXX", plaintext[:60])
-        except (ValueError, KeyError):
-            print("Incorrect decryption")
+        nonce = data[:12]
+        ciphertext = data[12:-16]
+        tag = data[-16:]
+        cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
+        data = cipher.decrypt_and_verify(ciphertext, tag)
+        plaintext.write(data)
 
-        
-
+    plaintext.seek(0)
+    m = sha256()
+    m.update(plaintext.getvalue())
+    
+    status = "OK" if file_hash == m.hexdigest() else "Corrupt"
     return Decrypt(
-        status="OK",
+        status=status,
         filename=download.name,
         timestamp=timestamp,
         num_chunks=len(chunks),
         hash_original=file_hash,
-        hash_download=None,
-        buffer=buff,
+        hash_download=m.hexdigest(),
+        buffer=plaintext,
     )
