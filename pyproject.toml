@@ -10,6 +10,7 @@ dependencies = [
     "fastapi[standard]",
     "gunicorn",
     "ipython",
+    "pycryptodome>=3.23.0",
     "pydantic",
     "pyyaml",
     "requests",
@@ -18,6 +19,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pre-commit>=4.0.1",
+    "pycryptodome-test-vectors>=1.0.22",
     "pytest >=8.3.3",
     "pytest-dependency>=0.6.0",
     "pytest-xdist>=3.8.0",

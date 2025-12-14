@@ -45,11 +45,7 @@ class Chunk(BaseModel):
 
 def verify_recaptcha(response_token, secret_key, remote_ip):
     url = "https://www.google.com/recaptcha/api/siteverify"
-    data = {
-        'secret': secret_key,
-        'response': response_token,
-        'remoteip': remote_ip
-    }
+    data = {"secret": secret_key, "response": response_token, "remoteip": remote_ip}
     response = requests.post(url, data=data, verify=True)
     result = response.json()
     return result.get("success", False)
