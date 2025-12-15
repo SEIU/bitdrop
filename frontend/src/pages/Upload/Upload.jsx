@@ -110,27 +110,26 @@ export default function Upload() {
         setLoading(false);
         setAlertMessage("CAPTCHA verification failed. Please try again.");
         console.error("Not a human.");
-        return;
-      }
-
-      // get the initial file hash (partial hash for large files, full for small files)
-      const fileHash = await createFileHash(selectedFile);
-
-      // chunked encryption and upload (multi-step process with progress tracking)
-      updateMessage("Beginning upload ...");
-      const isSuccess = await uploadChunkedFile({
-        selectedFile,
-        password,
-        fileHash,
-        id,
-        updateProgress,
-        updateMessage,
-      });
-
-      if (!isSuccess) {
-        throw new Error("Chunked upload failed. Check console for details.");
       } else {
-        handleUploadCompletion(fileHash, id);
+        // get the initial file hash (partial hash for large files, full for small files)
+        const fileHash = await createFileHash(selectedFile);
+
+        // chunked encryption and upload (multi-step process with progress tracking)
+        updateMessage("Beginning upload ...");
+        const isSuccess = await uploadChunkedFile({
+          selectedFile,
+          password,
+          fileHash,
+          id,
+          updateProgress,
+          updateMessage,
+        });
+
+        if (!isSuccess) {
+          throw new Error("Chunked upload failed. Check console for details.");
+        } else {
+          handleUploadCompletion(fileHash, id);
+        }
       }
     } catch (error) {
       console.error("Error posting file:", error);
@@ -340,7 +339,7 @@ export default function Upload() {
             </Box>
             <Box>
               {/* FOR DEVELOPMENT ONLY */}
-              {/* <Button onClick={goToDownload}>Verify Download (devs)</Button> */}
+              <Button onClick={goToDownload}>Verify Download (devs)</Button>
             </Box>
           </>
         )}

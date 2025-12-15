@@ -36,6 +36,8 @@ venv.bak/
 # Editors
 .vscode/
 .idea/
+Session.vim
+**.swp
 
 # OS Specific
 .DS_Store

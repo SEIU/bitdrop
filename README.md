@@ -46,13 +46,13 @@ interface:
    display within the deletion link.
 5. After a file is selected, encrypt it within the browser using standard
    SubtleCrypto developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/encrypt.
-   Use AES-CBC mode.
+   Use AES-GCM mode.
 6. Post the encrypted content to the backend.
 
-* In download screen  
-  * Extract the id from the verify route.  
-  * Collect a password from a form field.  
-  * Send the id to the download route.  
+* In download screen
+  * Extract the id from the verify route.
+  * Collect a password from a form field.
+  * Send the id to the download route.
   * Send the decrypted bytes from the backend to the user.
 
 In pseudo-code, the download screen will perform these actions:
