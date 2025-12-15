@@ -210,7 +210,7 @@ def download_file(fileId: str) -> JSONResponse:
     else:
         file_dir = matches[0]
         chunks = []
-        for chunk in sorted(file_dir.glob("*")):
+        for chunk in sorted(file_dir.glob("*"), key=lambda p: int(p.name)):
             chunks.append(Path(chunk).read_text())
 
         *_, fileHash, filename = file_dir.parts
