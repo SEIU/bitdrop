@@ -2,14 +2,17 @@ from datetime import datetime
 import os
 from pathlib import Path
 import shutil
+from typing import Literal
 import uuid
 
 import boto3
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, EmailStr
 import requests
+
+from app.utils import decrypt
 
 bitdrop = "https://b2.seiu.org"
 
@@ -219,6 +222,44 @@ def download_file(fileId: str) -> JSONResponse:
                 "chunks": chunks,
             }
         )
+
+
+@app.get("/download/{fileId}/{password}")
+def download_file(fileId: str, password: str | None = None) -> Response:
+    result = decrypt(fileId, password)
+    status: Literal["OK", "CORRUPT", "MISSING", "DUPLICATE"] = result.status
+    match status:
+        case "OK":
+            headers = {"Content-Disposition": f"attachment; filename={result.filename}"}
+            return Response(
+                content=result.buffer.getvalue(),
+                headers=headers,
+                media_type="application/octet-stream",
+                status_code=200,
+            )
+        case "CORRUPT":
+            return JSONResponse(
+                content={
+                    "message": f"Decryption failed! (probably the wrong password)",
+                },
+                status_code=401,
+            )
+        case "MISSING":
+            return JSONResponse(
+                content={
+                    "message": f"No file matching {fileId} was found",
+                },
+                status_code=404,
+            )
+        case "DUPLICATE":
+            return JSONResponse(
+                content={"message": f"The server has ambiguous {fileId} contents"},
+                status_code=409,
+            )
+        case _:
+            return JSONResponse(
+                content={"message": "Unexpected server error"}, status_code=500
+            )
 
 
 @app.delete("/download/{fileId}/{fileHash}")

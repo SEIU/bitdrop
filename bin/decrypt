@@ -7,13 +7,13 @@ import sys
 from app.utils import decrypt
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 3:
         print(
-            f"Usage: {basename(__file__)} <fileId> <fileHash> <password>", file=stderr
+            f"Usage: {basename(__file__)} <fileId> <password>", file=stderr
         )
         sys.exit(-1)
 
-    file_id, file_hash, password = argv[1:]
-    result = decrypt(file_id, file_hash, password)
+    file_id, password = argv[1:]
+    result = decrypt(file_id, password)
     print(result)
     (Path.home() / "tmp" / result.filename).write_bytes(result.buffer.getvalue())

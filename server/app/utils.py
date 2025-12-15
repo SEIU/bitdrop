@@ -52,20 +52,25 @@ def decrypt(file_id: str, password: str) -> Decrypt:
     key = derive_key_from_password(password, salt)
 
     plaintext = io.BytesIO()
-    for chunk in chunks:
+    for n, chunk in enumerate(chunks):
         data = b64decode(chunk.read_text())
         nonce = data[:12]
         ciphertext = data[12:-16]
         tag = data[-16:]
         cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
-        data = cipher.decrypt_and_verify(ciphertext, tag)
-        plaintext.write(data)
+        try:
+            # If chunk does not verify, something is corrupted
+            data = cipher.decrypt_and_verify(ciphertext, tag)
+            plaintext.write(data)
+        except Exception as err:
+            # Write nonsense to the buffer which will cause wrong SHA
+            plaintext.write(f"BAD CHUNK {n+1} ({err})\n".encode())
 
     plaintext.seek(0)
     m = sha256()
     m.update(plaintext.getvalue())
     
-    status = "OK" if file_hash == m.hexdigest() else "Corrupt"
+    status = "OK" if file_hash == m.hexdigest() else "CORRUPT"
     return Decrypt(
         status=status,
         filename=download.name,
