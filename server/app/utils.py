@@ -45,7 +45,7 @@ def decrypt(file_id: str, password: str) -> Decrypt:
     download = match[0]
     timestamp = download.parent.parent.parent.name
     file_hash = download.parent.name
-    chunks = list(download.glob("*"))
+    chunks = sorted(download.glob("*"), key=lambda s: int(s.name))
 
     salt_hex = file_hash[:32]
     salt = bytes.fromhex(salt_hex)
