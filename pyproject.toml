@@ -12,6 +12,7 @@ dependencies = [
     "ipython",
     "pycryptodome>=3.23.0",
     "pydantic",
+    "python-dotenv>=1.1.1",
     "pyyaml",
     "requests",
     "uvicorn",
