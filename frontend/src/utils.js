@@ -31,8 +31,7 @@ export const createToken = () => {
   return window.crypto.randomUUID();
 };
 
-// calculate SHA-256 hash of the first 512 KB of the file
-// used to create salt and iv
+// Must calculate SHA-256 hash of the (full) file to check integrity
 export const createFileHash = (file) => {
   if (!file) return Promise.resolve(null);
 
@@ -40,14 +39,11 @@ export const createFileHash = (file) => {
     try {
       const crypto = window.crypto.subtle;
       const reader = new FileReader();
-      // hash the first 512KB to avoid memory issues for large files,
-      // while still providing a unique-enough ID for the key salt.
-      const chunkToHash = file.slice(0, 512 * 1024);
 
       const buffer = await new Promise((res, rej) => {
         reader.onload = () => res(reader.result);
         reader.onerror = rej;
-        reader.readAsArrayBuffer(chunkToHash);
+        reader.readAsArrayBuffer(file);
       });
 
       const hashBuffer = await crypto.digest("SHA-256", buffer);
