@@ -1,4 +1,7 @@
 #!/bin/bash
+# What is URL for bitdrop
+export BITDROP_SERVER="https://b2.seiu.org"
+
 # Install tools used by the script, if not present
 sudo apt-get -y install net-tools jq coreutils 
 
