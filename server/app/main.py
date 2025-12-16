@@ -112,7 +112,8 @@ async def upload_chunk(chunk: Chunk) -> JSONResponse:
         content={
             "message": "Chunk uploaded successfully",
             "chunk_file": str(current_chunk),
-        }
+        },
+        status_code=201,
     )
 
 
@@ -328,7 +329,9 @@ def delete_file(file_id: str, file_hash: str) -> JSONResponse:
     matches = list(uploads_dir.glob(f"*/{file_id}/{file_hash}/*"))
     if not matches:
         return JSONResponse(
-            content={"message": f"No file found with ID {file_id} and hash {file_hash}"},
+            content={
+                "message": f"No file found with ID {file_id} and hash {file_hash}"
+            },
             status_code=404,
         )
     else:
