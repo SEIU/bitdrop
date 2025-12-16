@@ -6,6 +6,7 @@ export const clumpDownload = async (fileId) => {
     if (!res.error && res.data) {
       return {
         chunks: res.data.chunks,
+        fileName: res.data.fileName,
         fileHash: res.data.fileHash,
       };
     } else {
@@ -19,13 +20,17 @@ export const clumpDownload = async (fileId) => {
 export const chunkedDownload = async (fileId, numChunks) => {
   console.log("chunk");
   try {
-    let chunks = [];
+    let download = { chunks: [] };
     for (let i = 1; i <= numChunks; i++) {
       let res = await api.get(`download-chunk/${fileId}/${i}`);
-      console.log(res);
-      // if (!res.error) {
-      //   console.log(res);
-      // }
+      if (!res.error && res.data) {
+        download.chunks.push(res.data.chunk);
+        if (i === numChunks) {
+          download.fileName = res.data.fileName;
+          download.fileHash = res.data.fileHash;
+        }
+      }
+      return download;
     }
     // in a loop for numChunks times
     // make api call
