@@ -58,7 +58,7 @@ def test_upload_three_chunks(setup, chunkIndex):
         "encryptedData": secrets.token_hex(10),
     }
     response = client.post("upload-chunk", json=body)
-    assert response.status_code == 200
+    assert response.status_code == 201
     assert response.json()["message"] == "Chunk uploaded successfully"
     chunk_file = Path("/tmp") / fileId / f"of-3" / f"{chunkIndex}"
     assert response.json()["chunk_file"] == str(chunk_file)
