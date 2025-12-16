@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../api/axiosClient";
 import { useSearchParams } from "react-router";
-import { decryptFile } from "../utils";
+import { decryptFile } from "../utils/decryption";
 import {
   Button,
   TextField,
