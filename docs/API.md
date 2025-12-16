@@ -185,8 +185,8 @@ If the file exists, return a 200 status. The body will resemble:
 The frontend will decide whether the password is acceptable.  This password is
 explicitly never sent to the backend in this route.  We expect that the
 `fileHash` will be an SHA-256 hash of the original uploaded file, but the
-backend does not enforce any contraint. Albeit, the SHA hash is used as on an
-IV (initialization vector).
+backend does not enforce any contraint. Albeit, the SHA hash is used as an IV
+(initialization vector).
 
 If the file does not exist, a 404 is returned.
 
@@ -194,7 +194,7 @@ If the file does not exist, a 404 is returned.
 
 If the `fileId` exists, return a 200 status code with a JSON number as a
 response.  Specifically, this will always be a natural number.  By convention,
-we expect chunks to be 6,990,528 bytes, since the frontend by default breaks
+we expect chunks to be approximately 7 MB, since the frontend by default breaks
 binary files into 5 MiB chunks, then Base64 encodes them.  However, the
 backend imposes no such constraint, and a frontend may choose to send chunks
 of any size, encoded as text in any manner.  The final chunk will, of course,
@@ -223,7 +223,7 @@ response to this route is deliberately similar to that of `GET download/`:
     "filename": "secret-membership-data.csv",
     "fileHash": "sha256-hash",
     "totalChunks": 3,
-    "chunk": "cGV0LXBhaXJzLWV2aWRlbmNlLXBlbgo="
+    "chunk": "RWFzdGVyIEVnZwo="
 }
 ```
 
