@@ -49,6 +49,7 @@ class Chunk(BaseModel):
 
 
 def verify_recaptcha(response_token, secret_key, remote_ip=None):
+    "Verify the captcha used to prevent usage by robots"
     url = "https://www.google.com/recaptcha/api/siteverify"
     data = {"secret": secret_key, "response": response_token, "remoteip": remote_ip}
     response = requests.post(url, data=data, verify=True)
@@ -63,14 +64,14 @@ async def root() -> str:
 
 @app.post("/authentication")
 def authentication(token: Captcha) -> JSONResponse:
-    "This endpoint is for authentication purposes."
+    "Verify the captcha use to prevent usage by robots"
     verified = verify_recaptcha(token, os.getenv("RECAPTCHA_SECRET_KEY"))
     return JSONResponse(content=verified)
 
 
 @app.post("/upload-chunk")
 async def upload_chunk(chunk: Chunk) -> JSONResponse:
-    "Store the chunk of the file"
+    "Store an encrypted chunk of a file"
     if chunk.chunkIndex <= 0 or chunk.totalChunks <= 0:
         return JSONResponse(
             content={"message": "chunkIndex and totalChunks must be natural numbers"},
@@ -119,7 +120,7 @@ async def upload_chunk(chunk: Chunk) -> JSONResponse:
 async def complete_upload(
     body: CompleteUpload,
 ) -> JSONResponse:
-    "Complete upload of chunks and send an email"
+    "Finalize the upload of chunks and send an email"
     save_dir = Path("/tmp") / str(body.fileId)
 
     # Check for things that could be wrong with the upload
@@ -214,7 +215,7 @@ def count_chunks(file_id: str) -> JSONResponse:
 
 @app.get("/download/{file_id}")
 def download_file(file_id: str) -> JSONResponse:
-    "Download a file by its ID token"
+    "Download a file as encrypted chunks, using its file_id (UUID)"
     uploads_dir = Path.home() / "uploads"
 
     matches = list(uploads_dir.glob(f"*/{file_id}/*/*"))
@@ -246,7 +247,7 @@ def download_file(file_id: str) -> JSONResponse:
 
 @app.get("/download-chunk/{file_id}/{chunk_num}")
 def download_chunk(file_id: str, chunk: int) -> JSONResponse:
-    "Download a chunk by its ID token and chunk number"
+    "Download a chunk by its file_id (UUID) and chunk number"
     uploads_dir = Path.home() / "uploads"
 
     matches = list(uploads_dir.glob(f"*/{file_id}/*/*"))
@@ -282,6 +283,7 @@ def download_chunk(file_id: str, chunk: int) -> JSONResponse:
 
 @app.get("/download/{file_id}/{password}")
 def download_file(file_id: str, password: str | None = None) -> Response:
+    "Download decrypted file as a full file object (octet-stream)"
     result = decrypt(file_id, password)
     status: Literal["OK", "CORRUPT", "MISSING", "DUPLICATE"] = result.status
     match status:
@@ -320,7 +322,7 @@ def download_file(file_id: str, password: str | None = None) -> Response:
 
 @app.delete("/download/{file_id}/{file_hash}")
 def delete_file(file_id: str, file_hash: str) -> JSONResponse:
-    "Delete a file by its file_id and file_hash"
+    "Delete a file by its file_id (UUID) and file_hash (for verification)"
     uploads_dir = Path.home() / "uploads"
 
     matches = list(uploads_dir.glob(f"*/{file_id}/{file_hash}/*"))
