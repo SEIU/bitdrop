@@ -106,13 +106,6 @@ export const getIV = (hash) => {
   return iv; // Uint8Array of length 16
 };
 
-const getLast16Bytes = (ciphertextBuffer) => {
-  const encryptedView = new Uint8Array(ciphertextBuffer);
-  const startIndex = encryptedView.length - 16;
-  const last16Bytes = encryptedView.slice(startIndex, encryptedView.length);
-  return last16Bytes;
-};
-
 // encrypts a single file chunk and upload with retries/exponential backoff
 const encryptAndUploadChunk = async (
   chunk,
