@@ -45,7 +45,7 @@ given moment in time, we may have files resembling:
         └── 1
 </pre>
 
-This indicates that two uploads of particular `file_id` values are "in flight".
+This indicates that two uploads of particular `fileId` values are "in flight".
 In the specific example shown, chunk 2 of 5 for 6972b2be-cf9b-uuid has not yet
 arrived, for whatever reason.
 
