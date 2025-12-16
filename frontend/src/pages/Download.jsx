@@ -50,6 +50,13 @@ export default function Download() {
       // handle bad response
     }
 
+    let plainTextBlob = await decryptFile(
+      downloadResponse.chunks,
+      password,
+      downloadResponse.fileHash
+    );
+    downloadBlob(plainTextBlob, downloadResponse.fileName);
+
     // try {
     //   const response = await api.get(url);
     //   if (!response.error) {
