@@ -23,7 +23,7 @@ $HOME/uploads/
                 └── 2
 </pre>
 
-Nothing stored on disk will be unencyrpted.  The script `remove-old-uploads`
+Everything stored on disk will be encyrpted.  The script `remove-old-uploads`
 will run periodically as a cronjob to purge any files with timestamps older
 than 24 hours.
 
@@ -40,7 +40,7 @@ given moment in time, we may have files resembling:
 │       ├── 1
 │       ├── 3
 │       └── 4
-└── d44b5d5c-cf9b-uuid
+└── d44b5d5c-f793-uuid
     └── of-2
         └── 1
 </pre>
@@ -85,8 +85,8 @@ An uploaded chunk is defined by a POST body similar to:
 }
 ```
 
-By design, information including the SHA-256 hash of the full file, and even its
-filename, are not sent until all chunks have been sent.
+By design, information including the SHA-256 hash of the full file, and even
+its filename, are not sent until all chunks have been sent.
 
 The backend server is responsible for storing the posted bytes associated with
 their id token. These bytes will be deleted after either 24 hours have passed
@@ -95,7 +95,7 @@ or when they have been successfully downloaded once.
 The field `fileId` is a UUID that globally uniquely identifies the object
 being uploaded.
 
-In the happy case, this route simply returns a 200 status code.
+In the happy case, this route simply returns a 201 status code.
 
 ### Error conditions
 
@@ -154,7 +154,7 @@ If this condition is not fulfilled, a 4xx status code is returned.
 * If we have no chunks saved matching the provided `fileId`, return a 404
   status code.
 
-* If we have an incomplete collection of chunks pertaining to the `fileId' ,
+* If we have an incomplete collection of chunks pertaining to the `fileId`,
   return a 409 with a body similar to:
 
 ```json
@@ -183,12 +183,95 @@ If the file exists, return a 200 status. The body will resemble:
 ```
 
 The frontend will decide whether the password is acceptable.  This password is
-explicitly never sent to the backend.  We expect that the `fileHash` will be an
-SHA-256 hash of the original uploaded file, but the backend does not enforce
-any contraint. Albeit, the SHA hash is used as on an IV (initialization
-vector).
+explicitly never sent to the backend in this route.  We expect that the
+`fileHash` will be an SHA-256 hash of the original uploaded file, but the
+backend does not enforce any contraint. Albeit, the SHA hash is used as on an
+IV (initialization vector).
 
 If the file does not exist, a 404 is returned.
+
+# GET count-chunks/\<fileId\>
+
+If the `fileId` exists, return a 200 status code with a JSON number as a
+response.  Specifically, this will always be a natural number.  By convention,
+we expect chunks to be 6,990,528 bytes, since the frontend by default breaks
+binary files into 5 MiB chunks, then Base64 encodes them.  However, the
+backend imposes no such constraint, and a frontend may choose to send chunks
+of any size, encoded as text in any manner.  The final chunk will, of course,
+be of varying size.
+
+A frontend _may decide_ to utilize this information about the chunk count to
+modify the messaging presented to users, create a progress bar, or modify the
+download strategy used.  For example, the frontend might choose to use a call
+to `GET download/` for a small number of chunks, but use repeated calls to
+`GET download-chunk/` for a large number of chunks.
+
+If the `fileId` simply does not exist, we return a 404.  If the server is in a
+bad state with a duplicate of the `fileId` stored on disk, we return a 409
+(this should really never happen, and would reflect a programming error in the
+system).
+
+## GET download-chunk/\<fileId\>/<chunkNum\>
+
+Download just one chunk of an uploaded file, identified by `fileId` (and by
+`chunkNum`).  The usual constraints exist about valid chunk numbers. The 200
+response to this route is deliberately similar to that of `GET download/`:
+
+
+```json
+{
+    "filename": "secret-membership-data.csv",
+    "fileHash": "sha256-hash",
+    "totalChunks": 3,
+    "chunk": "cGV0LXBhaXJzLWV2aWRlbmNlLXBlbgo="
+}
+```
+
+Since one returned field is `totalChunks`, a caller _could_ simply ask for
+chunk 1 (which will always exist for an existing file) to determine the number
+of chunks. However, the call to `GET count-chunks/` should provide a faster
+response.
+
+It is the responsibility of the frontent to make this call for every chunk
+number that exists for a file.  Note that chunk numbers are natural numbers.
+An empty chunk numbered zero only exists if an error occurred during the
+upload, and acts as a sentinel for this situation.
+
+If the `fileId` simply does not exist, we return a 404.  If the server is in a
+bad state with a duplicate of the `fileId` stored on disk, we return a 409
+(this should really never happen, and would reflect a programming error in the
+system).
+
+## GET download/\<fileId\>/\<password\>
+
+This route is not our recommended implementation.  However, an API exists to
+perform decryption on the backend, and send a file as a response.  This can be
+valuable for debugging purposes, and may be appropriate in some scenarios
+better to distribute CPU and memory resources from browser to server.
+
+While this route still never stores unencrypted content on disk, it does send
+the password over the wire to the server, and send the unencrypted file in
+response to the recipient.  If TLS is used, this should still be secure,  but
+it does create an additional attack surface.
+
+In general, the backend is agnostic about the encryption used by the frontend.
+However, to perform decryption on the backend side, we assume that each chunk
+is encrypted using AES in GCM mode, Base64 encoded, and that the key is
+derived using PBKDF2, with a salt of 12 bytes (taken from the prefix of the
+fileId), a count of 300,000 rounds, and a hash of SHA256.  If a frontend
+chooses any different algorithms for key derivation, chunk encoding, or
+encryption, this route will simply generate nonsensical data.
+
+If all goes well, the file is returned as an octet-stream, with
+`Content-disposition` of `attachment; filename=<filename>` and a status code
+of 200.
+
+In the unhappy cases, we return a 401 if the decrypted file is corrupted. This
+could indicate either that the wrong password was provided or that the
+frontend has used different algorithms.  If the `fileId` simply does not
+exist, we return a 404.  If the server is in a bad state with a duplicate of
+the `fileId` stored on disk, we return a 409 (this should really never happen,
+and would reflect a programming error in the system).
 
 ## DELETE download/\<fileId\>/\<fileHash\>
 
