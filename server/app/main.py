@@ -247,7 +247,7 @@ def download_file(file_id: str) -> JSONResponse:
 
 
 @app.get("/download-chunk/{file_id}/{chunk_num}")
-def download_chunk(file_id: str, chunk: int) -> JSONResponse:
+def download_chunk(file_id: str, chunk_num: int) -> JSONResponse:
     "Download a chunk by its file_id (UUID) and chunk number"
     uploads_dir = Path.home() / "uploads"
 
