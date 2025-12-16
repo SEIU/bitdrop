@@ -15,7 +15,7 @@ import requests
 
 from app.utils import decrypt
 
-load_dotenv() 
+load_dotenv()
 bitdrop = os.getenv("BITDROP_SERVER")
 
 app = FastAPI()
@@ -193,19 +193,38 @@ async def complete_upload(
     )
 
 
-@app.get("/download/{fileId}")
-def download_file(fileId: str) -> JSONResponse:
-    "Download a file by its ID token"
+@app.get("/count-chunks/{file_id}")
+def count_chunks(file_id: str) -> JSONResponse:
+    "Find the number of chunks in an available download"
     uploads_dir = Path.home() / "uploads"
 
-    matches = list(uploads_dir.glob(f"*/{fileId}/*/*"))
+    matches = list(uploads_dir.glob(f"*/{file_id}/*/*"))
     if not matches:
         return JSONResponse(
-            content={"message": f"No file found with ID {fileId}"}, status_code=404
+            content={"message": f"No file found with ID {file_id}"}, status_code=404
         )
     elif len(matches) > 1:
         return JSONResponse(
-            content={"message": f"Multiple files found with ID {fileId}"},
+            content={"message": f"Multiple files found with ID {file_id}"},
+            status_code=409,
+        )
+    else:
+        return JSONResponse(content=len(list(matches[0].glob("*"))), status_code=200)
+
+
+@app.get("/download/{file_id}")
+def download_file(file_id: str) -> JSONResponse:
+    "Download a file by its ID token"
+    uploads_dir = Path.home() / "uploads"
+
+    matches = list(uploads_dir.glob(f"*/{file_id}/*/*"))
+    if not matches:
+        return JSONResponse(
+            content={"message": f"No file found with ID {file_id}"}, status_code=404
+        )
+    elif len(matches) > 1:
+        return JSONResponse(
+            content={"message": f"Multiple files found with ID {file_id}"},
             status_code=409,
         )
     else:
@@ -214,20 +233,56 @@ def download_file(fileId: str) -> JSONResponse:
         for chunk in sorted(file_dir.glob("*"), key=lambda p: int(p.name)):
             chunks.append(Path(chunk).read_text())
 
-        *_, fileHash, filename = file_dir.parts
+        *_, file_hash, filename = file_dir.parts
         return JSONResponse(
             content={
                 "filename": str(filename),
-                "fileHash": str(fileHash),
+                "fileHash": str(file_hash),
                 "totalChunks": len(chunks),
                 "chunks": chunks,
             }
         )
 
 
-@app.get("/download/{fileId}/{password}")
-def download_file(fileId: str, password: str | None = None) -> Response:
-    result = decrypt(fileId, password)
+@app.get("/download-chunk/{file_id}/{chunk_num}")
+def download_chunk(file_id: str, chunk: int) -> JSONResponse:
+    "Download a chunk by its ID token and chunk number"
+    uploads_dir = Path.home() / "uploads"
+
+    matches = list(uploads_dir.glob(f"*/{file_id}/*/*"))
+    if not matches:
+        return JSONResponse(
+            content={"message": f"No file found with ID {file_id}"}, status_code=404
+        )
+    elif len(matches) > 1:
+        return JSONResponse(
+            content={"message": f"Multiple files found with ID {file_id}"},
+            status_code=409,
+        )
+    else:
+        file_dir = matches[0]
+        *_, file_hash, filename = file_dir.parts
+        chunks = list(file_dir.glob(str(chunk)))
+        if len(chunks) != 1:
+            return JSONResponse(
+                content={"message": f"Chunk {chunk_num} unavailable or ambiguous"},
+                status_code=404,
+            )
+
+        return JSONResponse(
+            content={
+                "filename": str(filename),
+                "fileHash": str(file_hash),
+                "totalChunks": len(chunks),
+                "chunk": Path(chunks[0]).read_text(),
+            },
+            status_code=200,
+        )
+
+
+@app.get("/download/{file_id}/{password}")
+def download_file(file_id: str, password: str | None = None) -> Response:
+    result = decrypt(file_id, password)
     status: Literal["OK", "CORRUPT", "MISSING", "DUPLICATE"] = result.status
     match status:
         case "OK":
@@ -248,13 +303,13 @@ def download_file(fileId: str, password: str | None = None) -> Response:
         case "MISSING":
             return JSONResponse(
                 content={
-                    "message": f"No file matching {fileId} was found",
+                    "message": f"No file matching {file_id} was found",
                 },
                 status_code=404,
             )
         case "DUPLICATE":
             return JSONResponse(
-                content={"message": f"The server has ambiguous {fileId} contents"},
+                content={"message": f"The server has ambiguous {file_id} contents"},
                 status_code=409,
             )
         case _:
@@ -263,15 +318,15 @@ def download_file(fileId: str, password: str | None = None) -> Response:
             )
 
 
-@app.delete("/download/{fileId}/{fileHash}")
-def delete_file(fileId: str, fileHash: str) -> JSONResponse:
-    "Delete a file by its fileId and fileHash"
+@app.delete("/download/{file_id}/{file_hash}")
+def delete_file(file_id: str, file_hash: str) -> JSONResponse:
+    "Delete a file by its file_id and file_hash"
     uploads_dir = Path.home() / "uploads"
 
-    matches = list(uploads_dir.glob(f"*/{fileId}/{fileHash}/*"))
+    matches = list(uploads_dir.glob(f"*/{file_id}/{file_hash}/*"))
     if not matches:
         return JSONResponse(
-            content={"message": f"No file found with ID {fileId} and hash {fileHash}"},
+            content={"message": f"No file found with ID {file_id} and hash {file_hash}"},
             status_code=404,
         )
     else:
@@ -280,5 +335,5 @@ def delete_file(fileId: str, fileHash: str) -> JSONResponse:
             shutil.rmtree(ts_dir)
 
         return JSONResponse(
-            content={"message": f"File with ID {fileId} and hash {fileHash} deleted"}
+            content={"message": f"File with ID {file_id} and hash {file_hash} deleted"}
         )
