@@ -264,7 +264,7 @@ def download_chunk(file_id: str, chunk_num: int) -> JSONResponse:
     else:
         file_dir = matches[0]
         *_, file_hash, filename = file_dir.parts
-        chunks = list(file_dir.glob(str(chunk)))
+        chunks = list(file_dir.glob(str(chunk_num)))
         if len(chunks) != 1:
             return JSONResponse(
                 content={"message": f"Chunk {chunk_num} unavailable or ambiguous"},
