@@ -1,5 +1,29 @@
 import api from "./axiosClient";
 
+export const getNumberOfChunks = async (fileId) => {
+  try {
+    let res = await api.get(`/count-chunks/${fileId}`);
+    if (!res.error && res.data) {
+      return {
+        success: true,
+        data: res.data,
+      };
+    } else {
+      return {
+        success: false,
+        error: res,
+        message: "Unable to get number of chunks.",
+      };
+    }
+  } catch (err) {
+    return {
+      success: false,
+      error: err,
+      message: "Unable to get number of chunks.",
+    };
+  }
+};
+
 export const clumpDownload = async (fileId) => {
   console.log("clump");
   try {
@@ -7,19 +31,22 @@ export const clumpDownload = async (fileId) => {
     if (!res.error && res.data) {
       return {
         chunks: res.data.chunks,
-        fileName: res.data.fileName,
+        fileName: res.data.filename,
         fileHash: res.data.fileHash,
         success: true,
       };
     } else {
-      console.error(res);
-      return res;
+      return {
+        success: false,
+        error: res,
+        message: "Unable to download file.",
+      };
     }
   } catch (err) {
-    console.error(err);
     return {
       success: false,
       error: err,
+      message: "Unable to download file.",
     };
   }
 };
@@ -39,20 +66,41 @@ export const chunkedDownload = async (fileId, numChunks) => {
         }
       } else {
         // error downloading a chunk
-        console.error(res);
         return {
           success: false,
-          error: `download failed on chunk ${i}`,
+          error: res,
           response: res,
+          message: `download failed on chunk ${i}`,
         };
       }
     }
     return download;
   } catch (err) {
-    console.error(err);
     return {
       success: false,
       error: err,
+      message: "Chunked download failed.",
     };
+  }
+};
+
+export const downloadBlob = (blob, filename) => {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  return true;
+};
+
+export const deleteFile = async (id, hash) => {
+  let url = `/download/${id}/${hash}`;
+  try {
+    const response = await api.delete(url);
+  } catch (error) {
+    console.error("Error downloading file:", error);
   }
 };
