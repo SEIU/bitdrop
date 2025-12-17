@@ -68,6 +68,7 @@ const encryptAndUploadChunk = async (
   }
 };
 
+// TODO high-level description
 export const uploadChunkedFile = async ({
   selectedFile,
   password,

@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { containerStyles } from "../components/sharedStyles";
 import { chunkedDownload, clumpDownload } from "../api/download";
+const MAX_DOWNLOAD_CHUNKS = 10; // TODO env variable
 
 export default function Download() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -34,59 +35,41 @@ export default function Download() {
   const handleDownload = async () => {
     setDownloading(true);
     let id = searchParams.get("id");
-    let url = `/count-chunks/${id}`;
-    const numChunkResponse = await api.get(url);
+    const numChunkResponse = await api.get(`/count-chunks/${id}`);
     let downloadResponse;
 
     if (numChunkResponse.status === 200) {
-      if (numChunkResponse.data <= 3) {
-        // TODO env variable
+      if (numChunkResponse.data <= MAX_DOWNLOAD_CHUNKS) {
+        // this download has relatively few chunks, ok to download all chunks in one request
         downloadResponse = await clumpDownload(id);
       } else {
-        // chunked download
+        // too many chunks for one request, download one chunk at a time
         downloadResponse = await chunkedDownload(id, numChunkResponse.data);
       }
     } else {
-      // handle bad response
+      setAlertMessage(
+        "There was a problem downloading this file. Please try again later."
+      );
+      console.error(numChunkResponse);
     }
 
-    let plainTextBlob = await decryptFile(
-      downloadResponse.chunks,
-      password,
-      downloadResponse.fileHash
-    );
-    downloadBlob(plainTextBlob, downloadResponse.fileName);
-
-    // try {
-    //   const response = await api.get(url);
-    //   if (!response.error) {
-    //     let plainTextBlob = await decryptFile(
-    //       response.data.chunks,
-    //       password,
-    //       response.data.fileHash
-    //     );
-    //     downloadBlob(plainTextBlob, response.data.filename);
-    //     await deleteFile(id, response.data.fileHash);
-    //     setDownloadDisabled(true);
-    //     setDownloading(false);
-    //   } else {
-    //     console.error("Error downloading file:", response);
-    //     setAlertMessage(
-    //       "There was a problem downloading this file. Make sure you have the correct password for this asset."
-    //     );
-    //     setDownloading(false);
-    //   }
-    // } catch (err) {
-    //   if (err.response?.status === 404) {
-    //     setAlertMessage(err.response.data.message);
-    //   } else {
-    //     setAlertMessage(
-    //       "There was a problem decrypting this file. Make sure you have the correct password for this asset."
-    //     );
-    //   }
-    //   console.error("Error decrypting file:", err);
-    //   setDownloading(false);
-    // }
+    if (downloadResponse.success) {
+      let decryptionResult = await decryptFile(
+        downloadResponse.chunks,
+        password,
+        downloadResponse.fileHash
+      );
+      if (decryptionResult.success) {
+        downloadBlob(decryptionResult.data, downloadResponse.fileName);
+      } else {
+        setAlertMessage(decryptionResult.message);
+      }
+    } else {
+      setAlertMessage(
+        "There was a problem downloading this file. Please try again later."
+      );
+    }
+    setDownloading(false);
   };
 
   const downloadBlob = (blob, filename) => {

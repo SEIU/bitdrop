@@ -5,41 +5,58 @@ import {
 } from "./utils";
 
 export const decryptFile = async (chunks, password, hash) => {
-  const saltHex = hash.slice(0, 32);
-  const salt = hexToBytes(saltHex);
-  const key = await deriveKeyFromPassword(password, salt);
-  let plainTextChunks = [];
+  try {
+    // key derivation
+    const saltHex = hash.slice(0, 32);
+    const salt = hexToBytes(saltHex);
+    const key = await deriveKeyFromPassword(password, salt);
 
-  for (let i = 0; i < chunks.length; i++) {
-    let encryptedBuffer = await base64ToArrayBuffer(chunks[i]);
-    let decryptedChunk;
-    const nonce = encryptedBuffer.slice(0, 12);
-    const ciphertextWithTag = encryptedBuffer.slice(12);
+    let plainTextChunks = [];
 
-    try {
-      decryptedChunk = await window.crypto.subtle.decrypt(
-        { name: "AES-GCM", iv: nonce },
-        key,
-        ciphertextWithTag
-      );
-    } catch (err) {
-      console.error(
-        `Decryption failed at chunk ${i + 1}/${chunks.length}.`,
-        err
-      );
-      throw new Error(
-        "Decryption failed. Please check your password or ensure the file is not corrupted."
-      );
+    for (let i = 0; i < chunks.length; i++) {
+      // base64 decoding
+      let encryptedBuffer = await base64ToArrayBuffer(chunks[i]);
+      if (!encryptedBuffer)
+        throw new Error(`Chunk ${i + 1} could not be decoded.`);
+
+      const nonce = encryptedBuffer.slice(0, 12);
+      const ciphertextWithTag = encryptedBuffer.slice(12);
+
+      // decryption
+      try {
+        const decryptedChunk = await window.crypto.subtle.decrypt(
+          { name: "AES-GCM", iv: nonce },
+          key,
+          ciphertextWithTag
+        );
+        plainTextChunks.push(decryptedChunk);
+      } catch (cryptoErr) {
+        // catch this specifically to provide a better error message
+        return {
+          success: false,
+          message:
+            "Decryption failed. Incorrect password or corrupted file data.",
+          error: cryptoErr,
+        };
+      }
     }
-    plainTextChunks.push(decryptedChunk);
+
+    const plaintextBuffer = reassembleChunks(plainTextChunks);
+    const plaintextBlob = new Blob([plaintextBuffer], {
+      type: "application/octet-stream",
+    });
+
+    return {
+      success: true,
+      data: plaintextBlob,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      message: "Something went wrong during decryption.",
+      error: err,
+    };
   }
-
-  const plaintextBuffer = reassembleChunks(plainTextChunks);
-
-  const plaintextBlob = new Blob([plaintextBuffer], {
-    type: "application/octet-stream",
-  });
-  return plaintextBlob;
 };
 
 const reassembleChunks = (chunks) => {
