@@ -18,7 +18,7 @@ import {
   downloadBlob,
   getNumberOfChunks,
 } from "../api/download";
-const MAX_DOWNLOAD_CHUNKS = 10; // TODO env variable
+const CLUMP_DOWNLOAD_LIMIT = import.meta.env.VITE_CLUMP_DOWNLOAD_LIMIT || 10;
 
 export default function Download() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -49,7 +49,7 @@ export default function Download() {
     if (!numChunksResponse.success) return handleFailure(numChunksResponse);
 
     // fetch file
-    if (numChunksResponse.data <= MAX_DOWNLOAD_CHUNKS) {
+    if (numChunksResponse.data <= CLUMP_DOWNLOAD_LIMIT) {
       // this download has relatively few chunks, ok to download all chunks in one request
       downloadResponse = await clumpDownload(id);
     } else {
