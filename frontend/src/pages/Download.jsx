@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import api from "../api/axiosClient";
 import { useSearchParams } from "react-router";
-import { decryptFile } from "../utils";
+import { decryptFile } from "../utils/decryption";
 import {
   Button,
   TextField,
@@ -12,6 +11,14 @@ import {
   LinearProgress,
 } from "@mui/material";
 import { containerStyles } from "../components/sharedStyles";
+import {
+  chunkedDownload,
+  clumpDownload,
+  deleteFile,
+  downloadBlob,
+  getNumberOfChunks,
+} from "../api/download";
+const CLUMP_DOWNLOAD_LIMIT = import.meta.env.VITE_CLUMP_DOWNLOAD_LIMIT || 10;
 
 export default function Download() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -30,61 +37,52 @@ export default function Download() {
     setPassword(e.target.value);
   };
 
+  // perform a series of fetches and other actions
+  // return from the function if anything fails
   const handleDownload = async () => {
     setDownloading(true);
     let id = searchParams.get("id");
-    let url = `/download/${id}`;
+    let downloadResponse;
 
-    try {
-      const response = await api.get(url);
-      if (!response.error) {
-        let plainTextBlob = await decryptFile(
-          response.data.chunks,
-          password,
-          response.data.fileHash
-        );
-        downloadBlob(plainTextBlob, response.data.filename);
-        await deleteFile(id, response.data.fileHash);
-        setDownloadDisabled(true);
-        setDownloading(false);
-      } else {
-        console.error("Error downloading file:", response);
-        setAlertMessage(
-          "There was a problem downloading this file. Make sure you have the correct password for this asset."
-        );
-        setDownloading(false);
-      }
-    } catch (err) {
-      if (err.response?.status === 404) {
-        setAlertMessage(err.response.data.message);
-      } else {
-        setAlertMessage(
-          "There was a problem decrypting this file. Make sure you have the correct password for this asset."
-        );
-      }
-      console.error("Error decrypting file:", err);
-      setDownloading(false);
+    // get number of chunks in download
+    const numChunksResponse = await getNumberOfChunks(id);
+    if (!numChunksResponse.success) return handleFailure(numChunksResponse);
+
+    // fetch file
+    if (numChunksResponse.data <= CLUMP_DOWNLOAD_LIMIT) {
+      // this download has relatively few chunks, ok to download all chunks in one request
+      downloadResponse = await clumpDownload(id);
+    } else {
+      // too many chunks for one request, download one chunk at a time
+      downloadResponse = await chunkedDownload(id, numChunksResponse.data);
     }
+    if (!downloadResponse.success) return handleFailure(downloadResponse);
+
+    // decrypyt file
+    const decryptionResult = await decryptFile(
+      downloadResponse.chunks,
+      password,
+      downloadResponse.fileHash
+    );
+    if (!decryptionResult.success) return handleFailure(decryptionResult);
+
+    // download file
+    let downloadBlobResult = downloadBlob(
+      decryptionResult.data,
+      downloadResponse.fileName
+    );
+    if (downloadBlobResult) {
+      // delete file
+      deleteFile(id, downloadResponse.fileHash);
+    }
+    setDownloading(false);
+    setDownloadDisabled(true);
   };
 
-  const downloadBlob = (blob, filename) => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const deleteFile = async (id, hash) => {
-    let url = `/download/${id}/${hash}`;
-    try {
-      const response = await api.delete(url);
-    } catch (error) {
-      console.error("Error downloading file:", error);
-    }
+  const handleFailure = (res) => {
+    setDownloading(false);
+    setAlertMessage(res.message);
+    console.log(res);
   };
 
   const handleAlertClose = () => {

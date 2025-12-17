@@ -4,13 +4,13 @@ import api from "../../api/axiosClient";
 import Uploader from "./Uploader";
 import PasswordField from "../../components/PasswordField";
 import { containerStyles } from "../../components/sharedStyles";
+import { uploadChunkedFile } from "../../utils/encryption";
 import {
   generatePassword,
   isValidEmail,
   createToken,
   createFileHash,
-  uploadChunkedFile,
-} from "../../utils";
+} from "../../utils/utils";
 import {
   Container,
   Box,
