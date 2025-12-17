@@ -62,7 +62,7 @@ cd $HOME/bitdrop/server
 BACKEND_LOG="$HOME/log/backend-$(date +"%Y-%m-%d-%H-%M-%S").log"
 uv run python -m gunicorn \
     --timeout 0 \
-    --workers 2 \
+    --workers 4 \
     --max-requests 0 \
     -k uvicorn.workers.UvicornWorker app.main:app \
     --access-logfile - \
