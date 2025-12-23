@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, EmailStr
 import requests
 
-from app.utils import decrypt
+from app.utils import decrypt, log
 
 load_dotenv()
 bitdrop = os.getenv("BITDROP_SERVER")
@@ -63,7 +63,7 @@ async def root() -> str:
 
 
 @app.post("/authentication")
-def authentication(token: Captcha) -> JSONResponse:
+async def authentication(token: Captcha) -> JSONResponse:
     "Verify the captcha use to prevent usage by robots"
     verified = verify_recaptcha(token, os.getenv("RECAPTCHA_SECRET_KEY"))
     return JSONResponse(content=verified)
@@ -72,6 +72,8 @@ def authentication(token: Captcha) -> JSONResponse:
 @app.post("/upload-chunk")
 async def upload_chunk(chunk: Chunk) -> JSONResponse:
     "Store an encrypted chunk of a file"
+    log(f"POST upload-chunk: {chunk.fileId=} {chunk.chunkIndex=} {chunk.totalChunks=}")
+
     if chunk.chunkIndex <= 0 or chunk.totalChunks <= 0:
         return JSONResponse(
             content={"message": "chunkIndex and totalChunks must be natural numbers"},
@@ -122,6 +124,7 @@ async def complete_upload(
     body: CompleteUpload,
 ) -> JSONResponse:
     "Finalize the upload of chunks and send an email"
+    log(f"POST complete-upload: {body=}")
     save_dir = Path("/tmp") / str(body.fileId)
 
     # Check for things that could be wrong with the upload
@@ -196,8 +199,9 @@ async def complete_upload(
 
 
 @app.get("/count-chunks/{file_id}")
-def count_chunks(file_id: str) -> JSONResponse:
+async def count_chunks(file_id: str) -> JSONResponse:
     "Find the number of chunks in an available download"
+    log(f"GET count-chunks/{file_id}")
     uploads_dir = Path.home() / "uploads"
 
     matches = list(uploads_dir.glob(f"*/{file_id}/*/*"))
@@ -215,8 +219,9 @@ def count_chunks(file_id: str) -> JSONResponse:
 
 
 @app.get("/download/{file_id}")
-def download_file(file_id: str) -> JSONResponse:
+async def download_file(file_id: str) -> JSONResponse:
     "Download a file as encrypted chunks, using its file_id (UUID)"
+    log(f"GET download/{file_id}")
     uploads_dir = Path.home() / "uploads"
 
     matches = list(uploads_dir.glob(f"*/{file_id}/*/*"))
@@ -247,8 +252,9 @@ def download_file(file_id: str) -> JSONResponse:
 
 
 @app.get("/download-chunk/{file_id}/{chunk_num}")
-def download_chunk(file_id: str, chunk_num: int) -> JSONResponse:
+async def download_chunk(file_id: str, chunk_num: int) -> JSONResponse:
     "Download a chunk by its file_id (UUID) and chunk number"
+    log(f"GET download-chunk/{file_id}/{chunk_num}")
     uploads_dir = Path.home() / "uploads"
 
     matches = list(uploads_dir.glob(f"*/{file_id}/*/*"))
@@ -283,8 +289,9 @@ def download_chunk(file_id: str, chunk_num: int) -> JSONResponse:
 
 
 @app.get("/download/{file_id}/{password}")
-def download_file(file_id: str, password: str | None = None) -> Response:
+async def download_file(file_id: str, password: str | None = None) -> Response:
     "Download decrypted file as a full file object (octet-stream)"
+    log(f"GET download/{file_id}/<password>")
     result = decrypt(file_id, password)
     status: Literal["OK", "CORRUPT", "MISSING", "DUPLICATE"] = result.status
     match status:
@@ -322,8 +329,9 @@ def download_file(file_id: str, password: str | None = None) -> Response:
 
 
 @app.delete("/download/{file_id}/{file_hash}")
-def delete_file(file_id: str, file_hash: str) -> JSONResponse:
+async def delete_file(file_id: str, file_hash: str) -> JSONResponse:
     "Delete a file by its file_id (UUID) and file_hash (for verification)"
+    log(f"DELETE download/{file_id}/{file_hash}")
     uploads_dir = Path.home() / "uploads"
 
     matches = list(uploads_dir.glob(f"*/{file_id}/{file_hash}/*"))

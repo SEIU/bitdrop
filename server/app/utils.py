@@ -1,5 +1,6 @@
 from base64 import b64decode
 from collections import namedtuple
+from datetime import datetime
 from hashlib import sha256
 import io
 from pathlib import Path
@@ -12,6 +13,7 @@ Decrypt = namedtuple(
     "Decrypt",
     "status filename timestamp num_chunks hash_original hash_download buffer",
 )
+
 
 def derive_key_from_password(password: str, salt: bytes):
     pw_bytes = password.encode()
@@ -64,12 +66,12 @@ def decrypt(file_id: str, password: str) -> Decrypt:
             plaintext.write(data)
         except Exception as err:
             # Write nonsense to the buffer which will cause wrong SHA
-            plaintext.write(f"BAD CHUNK {n+1} ({err})\n".encode())
+            plaintext.write(f"BAD CHUNK {n + 1} ({err})\n".encode())
 
     plaintext.seek(0)
     m = sha256()
     m.update(plaintext.getvalue())
-    
+
     status = "OK" if file_hash == m.hexdigest() else "CORRUPT"
     return Decrypt(
         status=status,
@@ -80,3 +82,7 @@ def decrypt(file_id: str, password: str) -> Decrypt:
         hash_download=m.hexdigest(),
         buffer=plaintext,
     )
+
+
+def log(msg):
+    print(f"{datetime.now().isoformat()}: {msg}")
