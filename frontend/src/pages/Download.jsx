@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router";
 import { decryptFile } from "../utils/decryption";
 import {
@@ -26,6 +26,13 @@ export default function Download() {
   const [downloadDisabled, setDownloadDisabled] = useState(true);
   const [alertMessage, setAlertMessage] = useState(null);
   const [downloading, setDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadStatusMessage, setDownloadStatusMessage] = useState(null);
+  const updateProgress = useCallback(
+    (percent) => setDownloadProgress(percent),
+    []
+  );
+  const updateMessage = useCallback((msg) => setDownloadStatusMessage(msg), []);
 
   useEffect(() => {
     if (password !== "") {
@@ -43,6 +50,7 @@ export default function Download() {
     setDownloading(true);
     let id = searchParams.get("id");
     let downloadResponse;
+    updateMessage("Getting ready to download...");
 
     // get number of chunks in download
     const numChunksResponse = await getNumberOfChunks(id);
@@ -51,10 +59,16 @@ export default function Download() {
     // fetch file
     if (numChunksResponse.data <= CLUMP_DOWNLOAD_LIMIT) {
       // this download has relatively few chunks, ok to download all chunks in one request
+      updateMessage("Downloading...");
       downloadResponse = await clumpDownload(id);
     } else {
       // too many chunks for one request, download one chunk at a time
-      downloadResponse = await chunkedDownload(id, numChunksResponse.data);
+      downloadResponse = await chunkedDownload(
+        id,
+        numChunksResponse.data,
+        updateMessage,
+        updateProgress
+      );
     }
     if (!downloadResponse.success) return handleFailure(downloadResponse);
 
@@ -77,10 +91,12 @@ export default function Download() {
     }
     setDownloading(false);
     setDownloadDisabled(true);
+    updateMessage("Download complete!");
   };
 
   const handleFailure = (res) => {
     setDownloading(false);
+    setDownloadStatusMessage(null);
     setAlertMessage(res.message);
     console.log(res);
   };
@@ -91,8 +107,23 @@ export default function Download() {
 
   return (
     <>
-      {downloading && <LinearProgress sx={{ height: "8px" }} />}
+      {downloading && downloadProgress === 0 && (
+        <LinearProgress sx={{ height: "8px" }} />
+      )}
+      {downloading && downloadProgress > 0 && downloadProgress < 100 && (
+        <LinearProgress
+          variant="determinate"
+          value={downloadProgress}
+          sx={{ height: "8px" }}
+        />
+      )}
       <Container sx={containerStyles}>
+        {downloadStatusMessage && (
+          <Alert severity="info" sx={{ marginBottom: "20px" }}>
+            Upload Status:{" "}
+            <span className="font-bold">{downloadStatusMessage}</span>
+          </Alert>
+        )}
         {alertMessage && (
           <Alert
             severity="error"

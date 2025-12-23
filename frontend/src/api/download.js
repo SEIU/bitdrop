@@ -51,13 +51,25 @@ export const clumpDownload = async (fileId) => {
   }
 };
 
-export const chunkedDownload = async (fileId, numChunks) => {
+export const chunkedDownload = async (
+  fileId,
+  numChunks,
+  updateMessage,
+  updateProgress
+) => {
   console.log("chunk");
+  let successfulChunks = 0;
   try {
     let download = { chunks: [] };
     for (let i = 1; i <= numChunks; i++) {
       let res = await api.get(`download-chunk/${fileId}/${i}`);
       if (!res.error && res.data) {
+        successfulChunks++;
+        const currentProgress = Math.round(
+          (successfulChunks / numChunks) * 100
+        );
+        updateProgress(currentProgress);
+        updateMessage(`Chunk ${i} of ${numChunks} downloaded...`);
         download.chunks.push(res.data.chunk);
         if (i === numChunks) {
           download.fileName = res.data.filename;
@@ -66,6 +78,7 @@ export const chunkedDownload = async (fileId, numChunks) => {
         }
       } else {
         // error downloading a chunk
+        updateMessage(null);
         return {
           success: false,
           error: res,
@@ -104,3 +117,4 @@ export const deleteFile = async (id, hash) => {
     console.error("Error downloading file:", error);
   }
 };
+// if it's a chunked upload, but a clump download, delete throws CORS error
