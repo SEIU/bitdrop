@@ -106,7 +106,16 @@ export default function Download() {
 
   return (
     <>
-      {downloading && <LinearProgress sx={{ height: "8px" }} />}
+      {downloading && downloadProgress === 0 && (
+        <LinearProgress sx={{ height: "8px" }} />
+      )}
+      {downloading && downloadProgress > 0 && downloadProgress < 100 && (
+        <LinearProgress
+          variant="determinate"
+          value={downloadProgress}
+          sx={{ height: "8px" }}
+        />
+      )}
       <Container sx={containerStyles}>
         {downloadStatusMessage && (
           <Alert severity="info" sx={{ marginBottom: "20px" }}>
