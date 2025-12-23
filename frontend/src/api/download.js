@@ -24,7 +24,7 @@ export const getNumberOfChunks = async (fileId) => {
   }
 };
 
-export const clumpDownload = async (fileId, updateMessage) => {
+export const clumpDownload = async (fileId) => {
   console.log("clump");
   try {
     const res = await api.get(`/download/${fileId}`);

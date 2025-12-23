@@ -59,7 +59,8 @@ export default function Download() {
     // fetch file
     if (numChunksResponse.data <= CLUMP_DOWNLOAD_LIMIT) {
       // this download has relatively few chunks, ok to download all chunks in one request
-      downloadResponse = await clumpDownload(id, updateMessage);
+      updateMessage("Downloading...");
+      downloadResponse = await clumpDownload(id);
     } else {
       // too many chunks for one request, download one chunk at a time
       downloadResponse = await chunkedDownload(
@@ -90,7 +91,7 @@ export default function Download() {
     }
     setDownloading(false);
     setDownloadDisabled(true);
-    updateMessage("Downloading complete!");
+    updateMessage("Download complete!");
   };
 
   const handleFailure = (res) => {
