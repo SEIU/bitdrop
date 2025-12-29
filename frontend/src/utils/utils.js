@@ -1,5 +1,11 @@
 import axios from "axios";
 const PASSWORD_LENGTH = 4;
+const MAX_SIZE_MIB = 100;
+const MAX_SIZE_BYTES = MAX_SIZE_MIB * 1024 * 1024; // 104,857,600
+
+export const checkFileSize = (fileSize) => {
+  return fileSize < MAX_SIZE_BYTES;
+};
 
 export const generatePassword = async () => {
   const wordList = await axios

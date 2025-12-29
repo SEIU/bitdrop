@@ -1,15 +1,16 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
-import api from "../../api/axiosClient";
 import Uploader from "./Uploader";
 import PasswordField from "../../components/PasswordField";
 import { containerStyles } from "../../components/sharedStyles";
+import { uploadFinalChunk, verifyHumanity } from "../../api/upload";
 import { uploadChunkedFile } from "../../utils/encryption";
 import {
   generatePassword,
   isValidEmail,
   createToken,
   createFileHash,
+  checkFileSize,
 } from "../../utils/utils";
 import {
   Container,
@@ -25,8 +26,6 @@ const inputBoxStyles = {
   marginBottom: "30px",
 };
 
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
-
 export default function Upload() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
@@ -40,6 +39,7 @@ export default function Upload() {
   const [alertMessage, setAlertMessage] = useState(null);
   const [captchaReady, setCaptchaReady] = useState(false);
   const [fileId, setFileId] = useState("");
+  const [fileSizeOK, setFileSizeOK] = useState(true);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatusMessage, setUploadStatusMessage] =
     useState("Ready to upload.");
@@ -84,12 +84,21 @@ export default function Upload() {
   }, []);
 
   useEffect(() => {
-    setCanSubmit(selectedFile && validEmail && captchaReady);
+    if (!fileSizeOK) {
+      setAlertMessage("This file exceeds the maximum upload size of 100MB");
+    } else {
+      setAlertMessage(null);
+    }
+  }, [selectedFile]);
+
+  useEffect(() => {
+    setCanSubmit(selectedFile && validEmail && captchaReady && fileSizeOK);
   }, [email, selectedFile, captchaReady]);
 
   const handleFileDrop = async (file) => {
     setSelectedFile(file[0]);
     setFileName(file[0].name);
+    setFileSizeOK(checkFileSize(file[0].size));
   };
 
   const handlePost = async () => {
@@ -100,20 +109,13 @@ export default function Upload() {
 
     try {
       // verify humanity
-      const recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, {
-        action: "upload",
-      });
-      const isHuman = await api.post(`/authentication`, {
-        recaptchaToken: recaptchaToken,
-      });
+      const isHuman = await verifyHumanity();
       if (!isHuman) {
         setLoading(false);
         setAlertMessage("CAPTCHA verification failed. Please try again.");
         console.error("Not a human.");
       } else {
-        // get the initial file hash (partial hash for large files, full for small files)
         const fileHash = await createFileHash(selectedFile);
-
         // chunked encryption and upload (multi-step process with progress tracking)
         updateMessage("Beginning upload ...");
         const isSuccess = await uploadChunkedFile({
@@ -135,47 +137,25 @@ export default function Upload() {
       console.error("Error posting file:", error);
       setLoading(false);
       setAlertMessage("There was a problem uploading your file.");
-      // setPostIsSuccessful(true); // XXX FOR DEVS
     }
   };
 
   const handleUploadCompletion = async (fileHash, id) => {
-    let finalBody = {
+    let isSuccess = uploadFinalChunk({
       email: email,
       fileId: id,
       fileHash: fileHash,
       filename: fileName,
-    };
-    let response;
-
-    try {
-      // attempt to send final request with retries in case it arrives before the last chunk
-      for (let attempt = 0; attempt < 3; attempt++) {
-        const delay = 1000 * Math.pow(3, attempt);
-        if (attempt > 0) {
-          await new Promise((resolve) => setTimeout(resolve, delay));
-        }
-        response = await api.post(`/complete-upload`, finalBody);
-        if (!response.error) {
-          console.log("File posted successfully:", response.data);
-          setPostIsSuccessful(true);
-          updateMessage("Upload complete.");
-          setUploadProgress(100);
-          setLoading(false);
-          break;
-        }
-      }
-      if (response.error) {
-        console.error("Error posting file:", response);
-        setLoading(false);
-        setAlertMessage("There was a problem uploading your file.");
-        setPostIsSuccessful(false);
-      }
-    } catch (error) {
-      console.error("Error posting file:", error);
+    });
+    if (isSuccess) {
+      setPostIsSuccessful(true);
+      updateMessage("Upload complete.");
+      setUploadProgress(100);
+      setLoading(false);
+    } else {
       setLoading(false);
       setAlertMessage("There was a problem uploading your file.");
-      // setPostIsSuccessful(true); // XXX FOR DEVS
+      setPostIsSuccessful(false);
     }
   };
 
