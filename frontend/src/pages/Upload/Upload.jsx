@@ -10,6 +10,7 @@ import {
   isValidEmail,
   createToken,
   createFileHash,
+  checkFileSize,
 } from "../../utils/utils";
 import {
   Container,
@@ -38,6 +39,7 @@ export default function Upload() {
   const [alertMessage, setAlertMessage] = useState(null);
   const [captchaReady, setCaptchaReady] = useState(false);
   const [fileId, setFileId] = useState("");
+  const [fileSizeOK, setFileSizeOK] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatusMessage, setUploadStatusMessage] =
     useState("Ready to upload.");
@@ -82,12 +84,21 @@ export default function Upload() {
   }, []);
 
   useEffect(() => {
-    setCanSubmit(selectedFile && validEmail && captchaReady);
+    if (!fileSizeOK) {
+      setAlertMessage("This file exceeds the maximum upload size of 100MB");
+    } else {
+      setAlertMessage(null);
+    }
+  }, [selectedFile]);
+
+  useEffect(() => {
+    setCanSubmit(selectedFile && validEmail && captchaReady && fileSizeOK);
   }, [email, selectedFile, captchaReady]);
 
   const handleFileDrop = async (file) => {
     setSelectedFile(file[0]);
     setFileName(file[0].name);
+    setFileSizeOK(checkFileSize(file[0].size));
   };
 
   const handlePost = async () => {
