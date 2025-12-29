@@ -39,7 +39,7 @@ export default function Upload() {
   const [alertMessage, setAlertMessage] = useState(null);
   const [captchaReady, setCaptchaReady] = useState(false);
   const [fileId, setFileId] = useState("");
-  const [fileSizeOK, setFileSizeOK] = useState(false);
+  const [fileSizeOK, setFileSizeOK] = useState(true);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatusMessage, setUploadStatusMessage] =
     useState("Ready to upload.");
