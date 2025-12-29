@@ -66,6 +66,9 @@ async def root() -> str:
 async def authentication(token: Captcha) -> JSONResponse:
     "Verify the captcha use to prevent usage by robots"
     verified = verify_recaptcha(token, os.getenv("RECAPTCHA_SECRET_KEY"))
+    t = token.recaptchaToken
+    token_fragment = f"{t[:12]}...{t[-12:]} ({verified=})"
+    log(f"POST authentication: {token_fragment=} {verified=}")
     return JSONResponse(content=verified)
 
 
@@ -219,7 +222,7 @@ async def count_chunks(file_id: str) -> JSONResponse:
 
 
 @app.get("/download/{file_id}")
-async def download_file(file_id: str) -> JSONResponse:
+async def download_as_chunks(file_id: str) -> JSONResponse:
     "Download a file as encrypted chunks, using its file_id (UUID)"
     log(f"GET download/{file_id}")
     uploads_dir = Path.home() / "uploads"
@@ -292,7 +295,7 @@ async def download_chunk(file_id: str, chunk_num: int) -> JSONResponse:
 async def download_file(file_id: str, password: str | None = None) -> Response:
     "Download decrypted file as a full file object (octet-stream)"
     log(f"GET download/{file_id}/<password>")
-    result = decrypt(file_id, password)
+    result = decrypt(file_id, password or "")
     status: Literal["OK", "CORRUPT", "MISSING", "DUPLICATE"] = result.status
     match status:
         case "OK":
