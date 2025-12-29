@@ -319,7 +319,7 @@ export default function Upload() {
             </Box>
             <Box>
               {/* FOR DEVELOPMENT ONLY */}
-              <Button onClick={goToDownload}>Verify Download (devs)</Button>
+              {/* <Button onClick={goToDownload}>Verify Download (devs)</Button> */}
             </Box>
           </>
         )}
