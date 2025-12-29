@@ -9,7 +9,7 @@ export const verifyHumanity = async () => {
     const res = await api.post(`/authentication`, {
       recaptchaToken: recaptchaToken,
     });
-    return res;
+    return res.data;
   } catch (err) {
     console.error("Authentication failed, ", err);
     return false;

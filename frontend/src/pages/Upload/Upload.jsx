@@ -109,7 +109,7 @@ export default function Upload() {
 
     try {
       // verify humanity
-      const isHuman = verifyHumanity();
+      const isHuman = await verifyHumanity();
       if (!isHuman) {
         setLoading(false);
         setAlertMessage("CAPTCHA verification failed. Please try again.");
