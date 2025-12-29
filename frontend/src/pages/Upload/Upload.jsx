@@ -26,6 +26,8 @@ const inputBoxStyles = {
   marginBottom: "30px",
 };
 
+const EMAIL_AUTH_TOKEN = import.meta.env.VITE_EMAIL_AUTH_TOKEN;
+
 export default function Upload() {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
@@ -141,21 +143,27 @@ export default function Upload() {
   };
 
   const handleUploadCompletion = async (fileHash, id) => {
-    let isSuccess = uploadFinalChunk({
-      email: email,
-      fileId: id,
-      fileHash: fileHash,
-      filename: fileName,
-    });
-    if (isSuccess) {
-      setPostIsSuccessful(true);
-      updateMessage("Upload complete.");
-      setUploadProgress(100);
-      setLoading(false);
+    if (EMAIL_AUTH_TOKEN) {
+      let isSuccess = uploadFinalChunk({
+        email: email,
+        fileId: id,
+        fileHash: fileHash,
+        filename: fileName,
+        emailAuthToken: EMAIL_AUTH_TOKEN,
+      });
+      if (isSuccess) {
+        setPostIsSuccessful(true);
+        updateMessage("Upload complete.");
+        setUploadProgress(100);
+        setLoading(false);
+      } else {
+        setLoading(false);
+        setAlertMessage("There was a problem uploading your file.");
+        setPostIsSuccessful(false);
+      }
     } else {
-      setLoading(false);
       setAlertMessage("There was a problem uploading your file.");
-      setPostIsSuccessful(false);
+      console.error("Email Auth Token is invalid: ", EMAIL_AUTH_TOKEN);
     }
   };
 
