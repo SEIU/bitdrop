@@ -67,8 +67,9 @@ async def authentication(token: Captcha) -> JSONResponse:
     "Verify the captcha use to prevent usage by robots"
     verified = verify_recaptcha(token, os.getenv("RECAPTCHA_SECRET_KEY"))
     t = token.recaptchaToken
-    token_fragment = f"{t[:12]}...{t[-12:]} ({verified=})"
+    token_fragment = f"{t[:12]}...{t[-12:]}"
     log(f"POST authentication: {token_fragment=} {verified=}")
+    verified = True  # For now, always accept the captcha
     return JSONResponse(content=verified)
 
 
