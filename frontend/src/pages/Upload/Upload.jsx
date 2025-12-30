@@ -1,3 +1,5 @@
+const EMAIL_AUTH_TOKEN = import.meta.env.VITE_EMAIL_AUTH_TOKEN;
+
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import Uploader from "./Uploader";
@@ -25,8 +27,6 @@ import {
 const inputBoxStyles = {
   marginBottom: "30px",
 };
-
-const EMAIL_AUTH_TOKEN = import.meta.env.VITE_EMAIL_AUTH_TOKEN;
 
 export default function Upload() {
   const [password, setPassword] = useState("");

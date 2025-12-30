@@ -1,0 +1,38 @@
+#!/bin/bash
+UUID=$(uuid)
+EMAIL='david.mertz@seiu.org'
+
+echo "Authentication status with a silly token"
+curl -s -X POST \
+     -H "Content-Type: application/json" \
+     -d '{"recaptchaToken":"foo"}' \
+     https://api.b2.seiu.org/authentication |
+jq
+
+echo "Upload two chunks that are not actually encrypted"
+curl -s -X POST \
+     -H "Content-Type: application/json" \
+     -d '{"fileId":"'$UUID'", "chunkIndex":1, "totalChunks":2, "encryptedData":"bar"}' \
+     https://api.b2.seiu.org/upload-chunk |
+jq
+curl -s -X POST \
+     -H "Content-Type: application/json" \
+     -d '{"fileId":"'$UUID'", "chunkIndex":2, "totalChunks":2, "encryptedData":"baz"}' \
+     https://api.b2.seiu.org/upload-chunk |
+jq
+
+echo "Complete the upload (give it filename, and receipient email)"
+curl -s -X POST \
+     -H "Content-Type: application/json" \
+     -d '{"fileId":"'$UUID'", "fileHash":"SHA", "email":"'$EMAIL'", "filename":"silly", "unit_test":true}' \
+     https://api.b2.seiu.org/complete-upload |
+jq
+
+echo "Download the file as (encrypted) chunks"
+curl -s https://api.b2.seiu.org/download/$UUID | jq
+
+echo "Delete the file to clean up"
+# Note that the "hash" is simply the string "SHA" not a genuine SHA-256 hash
+curl -s -X DELETE \
+     https://api.b2.seiu.org/download/$UUID/SHA | 
+jq

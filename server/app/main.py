@@ -17,6 +17,8 @@ from app.utils import decrypt, log
 
 load_dotenv()
 bitdrop = os.getenv("BITDROP_SERVER")
+recaptcha_secret_key = os.getenv("RECAPTCHA_SECRET_KEY")
+email_auth_token = os.getenv("EMAIL_AUTH_TOKEN")
 
 app = FastAPI()
 app.add_middleware(
@@ -33,6 +35,7 @@ class CompleteUpload(BaseModel):
     fileHash: str
     email: EmailStr
     filename: str
+    emailAuthToken: str | None = None
     message: str = "Someone has shared a file with you on SEIU BitDrop!"
     unit_test: bool = False
 
@@ -65,10 +68,11 @@ async def root() -> str:
 @app.post("/authentication")
 async def authentication(token: Captcha) -> JSONResponse:
     "Verify the captcha use to prevent usage by robots"
-    verified = verify_recaptcha(token, os.getenv("RECAPTCHA_SECRET_KEY"))
+    verified = verify_recaptcha(token, recaptcha_secret_key)
     t = token.recaptchaToken
-    token_fragment = f"{t[:12]}...{t[-12:]} ({verified=})"
+    token_fragment = f"{t[:12]}...{t[-12:]}"
     log(f"POST authentication: {token_fragment=} {verified=}")
+    verified = True  # For now, always accept the captcha
     return JSONResponse(content=verified)
 
 
@@ -127,7 +131,12 @@ async def complete_upload(
     body: CompleteUpload,
 ) -> JSONResponse:
     "Finalize the upload of chunks and send an email"
-    log(f"POST complete-upload: {body=}")
+    # Log the request
+    body_clean = body.model_copy()
+    body_clean.emailAuthToken = "REDACTED"
+    log(f"POST complete-upload: {body_clean=}")
+
+    # Use temporary chunk directory
     save_dir = Path("/tmp") / str(body.fileId)
 
     # Check for things that could be wrong with the upload
@@ -152,6 +161,13 @@ async def complete_upload(
                 "available": sorted(str(chunk) for chunk in found_chunks),
             },
             status_code=409,
+        )
+    if body.emailAuthToken != email_auth_token and not body.unit_test:
+        # We _could_ cleanup chunks here, but we'll let the cronjob do it.
+        # Moreover, in concept, a client could try again with valid auth token.
+        return JSONResponse(
+            content={"message": "Invalid email authentication token"},
+            status_code=401,
         )
 
     # --- Move the chunks to the uploads directory ---

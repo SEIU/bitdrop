@@ -154,6 +154,7 @@ export default function Download() {
               value={password}
               variant="outlined"
               onChange={handleChangePassword}
+              sx={{ width: "20em" }}
             />
           </Box>
 
