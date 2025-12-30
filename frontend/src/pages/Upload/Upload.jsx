@@ -163,7 +163,7 @@ export default function Upload() {
       }
     } else {
       setAlertMessage("There was a problem uploading your file.");
-      console.error("Email Auth Token is invalid: ", EMAIL_AUTH_TOKEN);
+      console.error("Email Auth Token is invalid.");
     }
   };
 
