@@ -23,7 +23,7 @@ jobs:
           echo "${environment}" > $PWD/frontend/.env
           echo "${recaptcha}" > $PWD/server/.env
           EMAIL_AUTH_TOKEN=$(head -c12 /dev/random | base64)
-          echo "EMAIL_AUTH_TOKEN=$EMAIL_AUTH_TOKEN" >> $PWD/frontend/.env
+          echo "VITE_EMAIL_AUTH_TOKEN=$EMAIL_AUTH_TOKEN" >> $PWD/frontend/.env
           echo "EMAIL_AUTH_TOKEN=$EMAIL_AUTH_TOKEN" >> $PWD/server/.env
 
       - name: Run backend tests
