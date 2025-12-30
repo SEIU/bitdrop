@@ -104,6 +104,11 @@ export default function Upload() {
   };
 
   const handlePost = async () => {
+    if (!EMAIL_AUTH_TOKEN) {
+      setAlertMessage("There was a problem uploading your file.");
+      console.error("Email auth token is invalid.");
+      return;
+    }
     setLoading(true);
     setAlertMessage(null);
     let id = createToken();
@@ -143,27 +148,22 @@ export default function Upload() {
   };
 
   const handleUploadCompletion = async (fileHash, id) => {
-    if (EMAIL_AUTH_TOKEN) {
-      let isSuccess = uploadFinalChunk({
-        email: email,
-        fileId: id,
-        fileHash: fileHash,
-        filename: fileName,
-        emailAuthToken: EMAIL_AUTH_TOKEN,
-      });
-      if (isSuccess) {
-        setPostIsSuccessful(true);
-        updateMessage("Upload complete.");
-        setUploadProgress(100);
-        setLoading(false);
-      } else {
-        setLoading(false);
-        setAlertMessage("There was a problem uploading your file.");
-        setPostIsSuccessful(false);
-      }
+    let isSuccess = uploadFinalChunk({
+      email: email,
+      fileId: id,
+      fileHash: fileHash,
+      filename: fileName,
+      emailAuthToken: EMAIL_AUTH_TOKEN,
+    });
+    if (isSuccess) {
+      setPostIsSuccessful(true);
+      updateMessage("Upload complete.");
+      setUploadProgress(100);
+      setLoading(false);
     } else {
+      setLoading(false);
       setAlertMessage("There was a problem uploading your file.");
-      console.error("Email Auth Token is invalid.");
+      setPostIsSuccessful(false);
     }
   };
 
