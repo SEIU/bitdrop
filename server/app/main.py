@@ -131,7 +131,12 @@ async def complete_upload(
     body: CompleteUpload,
 ) -> JSONResponse:
     "Finalize the upload of chunks and send an email"
-    log(f"POST complete-upload: {body=}")
+    # Log the request
+    body_clean = body.model_copy()
+    body_clean.emailAuthToken = "REDACTED"
+    log(f"POST complete-upload: {body_clean=}")
+
+    # Use temporary chunk directory
     save_dir = Path("/tmp") / str(body.fileId)
 
     # Check for things that could be wrong with the upload
