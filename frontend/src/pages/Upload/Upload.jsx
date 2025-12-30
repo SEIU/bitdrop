@@ -1,3 +1,5 @@
+const EMAIL_AUTH_TOKEN = import.meta.env.VITE_EMAIL_AUTH_TOKEN;
+
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import Uploader from "./Uploader";
@@ -146,6 +148,7 @@ export default function Upload() {
       fileId: id,
       fileHash: fileHash,
       filename: fileName,
+      emailAuthToken: EMAIL_AUTH_TOKEN,
     });
     if (isSuccess) {
       setPostIsSuccessful(true);

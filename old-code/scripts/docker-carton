@@ -1,7 +1,0 @@
-#! /bin/sh
-
-if [ -f "$APP_WORK/lufi.env" ]; then
-	. "$APP_WORK/lufi.env"
-fi
-
-exec gosu "$APP_USER" carton "$@"

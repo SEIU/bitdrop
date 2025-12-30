@@ -24,7 +24,7 @@ jq
 echo "Complete the upload (give it filename, and receipient email)"
 curl -s -X POST \
      -H "Content-Type: application/json" \
-     -d '{"fileId":"'$UUID'", "fileHash":"SHA", "email":"'$EMAIL'", "filename":"silly"}' \
+     -d '{"fileId":"'$UUID'", "fileHash":"SHA", "email":"'$EMAIL'", "filename":"silly", "unit_test":true}' \
      https://api.b2.seiu.org/complete-upload |
 jq
 
