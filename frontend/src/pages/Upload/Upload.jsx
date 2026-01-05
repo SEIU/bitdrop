@@ -104,6 +104,11 @@ export default function Upload() {
   };
 
   const handlePost = async () => {
+    if (!EMAIL_AUTH_TOKEN) {
+      setAlertMessage("There was a problem uploading your file.");
+      console.error("Email auth token is invalid.");
+      return;
+    }
     setLoading(true);
     setAlertMessage(null);
     let id = createToken();
