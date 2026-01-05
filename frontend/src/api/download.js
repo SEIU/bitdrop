@@ -12,7 +12,7 @@ export const getNumberOfChunks = async (fileId) => {
       return {
         success: false,
         error: res,
-        message: "Unable to get number of chunks.",
+        message: res.message,
       };
     }
   } catch (err) {
