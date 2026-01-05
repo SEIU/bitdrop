@@ -5,7 +5,7 @@ import { useNavigate } from "react-router";
 import Uploader from "./Uploader";
 import PasswordField from "../../components/PasswordField";
 import { containerStyles } from "../../components/sharedStyles";
-import { uploadFinalChunk, verifyHumanity } from "../../api/upload";
+import { uploadFinalChunk } from "../../api/upload";
 import { uploadChunkedFile } from "../../utils/encryption";
 import {
   generatePassword,
@@ -39,7 +39,6 @@ export default function Upload() {
   const [canSubmit, setCanSubmit] = useState(false);
   const [postIsSuccessful, setPostIsSuccessful] = useState(false);
   const [alertMessage, setAlertMessage] = useState(null);
-  const [captchaReady, setCaptchaReady] = useState(false);
   const [fileId, setFileId] = useState("");
   const [fileSizeOK, setFileSizeOK] = useState(true);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -53,39 +52,6 @@ export default function Upload() {
   const updateMessage = useCallback((msg) => setUploadStatusMessage(msg), []);
 
   useEffect(() => {
-    let intervalId;
-    const checkRecaptcha = () => {
-      if (typeof grecaptcha !== "undefined" && grecaptcha.ready) {
-        clearInterval(intervalId); // stop polling on success
-        grecaptcha.ready(() => {
-          setCaptchaReady(true);
-          console.log("reCAPTCHA is ready.");
-        });
-      } else {
-        console.warn("reCAPTCHA script not yet available, checking again...");
-      }
-    };
-    intervalId = setInterval(checkRecaptcha, 500);
-    // stop the interval when the component unmounts.
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (typeof grecaptcha === "undefined" || !grecaptcha.ready) {
-      console.error(
-        "reCAPTCHA script not found. Ensure it is loaded globally in the host HTML."
-      );
-      return;
-    }
-    grecaptcha.ready(() => {
-      setCaptchaReady(true);
-      console.log("reCAPTCHA is ready.");
-    });
-  }, []);
-
-  useEffect(() => {
     if (!fileSizeOK) {
       setAlertMessage("This file exceeds the maximum upload size of 100MB");
     } else {
@@ -94,8 +60,8 @@ export default function Upload() {
   }, [selectedFile]);
 
   useEffect(() => {
-    setCanSubmit(selectedFile && validEmail && captchaReady && fileSizeOK);
-  }, [email, selectedFile, captchaReady]);
+    setCanSubmit(selectedFile && validEmail && fileSizeOK);
+  }, [email, selectedFile]);
 
   const handleFileDrop = async (file) => {
     setSelectedFile(file[0]);
@@ -106,7 +72,7 @@ export default function Upload() {
   const handlePost = async () => {
     if (!EMAIL_AUTH_TOKEN) {
       setAlertMessage("There was a problem uploading your file.");
-      console.error("Email auth token is invalid.");
+      console.error("Email auth token is missing.");
       return;
     }
     setLoading(true);
@@ -115,30 +81,22 @@ export default function Upload() {
     setFileId(id);
 
     try {
-      // verify humanity
-      const isHuman = await verifyHumanity();
-      if (!isHuman) {
-        setLoading(false);
-        setAlertMessage("CAPTCHA verification failed. Please try again.");
-        console.error("Not a human.");
-      } else {
-        const fileHash = await createFileHash(selectedFile);
-        // chunked encryption and upload (multi-step process with progress tracking)
-        updateMessage("Beginning upload ...");
-        const isSuccess = await uploadChunkedFile({
-          selectedFile,
-          password,
-          fileHash,
-          id,
-          updateProgress,
-          updateMessage,
-        });
+      const fileHash = await createFileHash(selectedFile);
+      // chunked encryption and upload (multi-step process with progress tracking)
+      updateMessage("Beginning upload ...");
+      const isSuccess = await uploadChunkedFile({
+        selectedFile,
+        password,
+        fileHash,
+        id,
+        updateProgress,
+        updateMessage,
+      });
 
-        if (!isSuccess) {
-          throw new Error("Chunked upload failed. Check console for details.");
-        } else {
-          handleUploadCompletion(fileHash, id);
-        }
+      if (!isSuccess) {
+        throw new Error("Chunked upload failed. Check console for details.");
+      } else {
+        handleUploadCompletion(fileHash, id);
       }
     } catch (error) {
       console.error("Error posting file:", error);
@@ -148,7 +106,7 @@ export default function Upload() {
   };
 
   const handleUploadCompletion = async (fileHash, id) => {
-    let isSuccess = uploadFinalChunk({
+    let isSuccess = await uploadFinalChunk({
       email: email,
       fileId: id,
       fileHash: fileHash,

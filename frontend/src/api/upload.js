@@ -1,20 +1,4 @@
 import api from "./axiosClient";
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
-
-export const verifyHumanity = async () => {
-  try {
-    const recaptchaToken = await grecaptcha.execute(RECAPTCHA_SITE_KEY, {
-      action: "upload",
-    });
-    const res = await api.post(`/authentication`, {
-      recaptchaToken: recaptchaToken,
-    });
-    return res.data;
-  } catch (err) {
-    console.error("Authentication failed, ", err);
-    return false;
-  }
-};
 
 export const uploadFinalChunk = async (finalBody) => {
   try {
