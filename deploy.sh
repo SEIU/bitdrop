@@ -1,6 +1,16 @@
 #!/bin/bash
+
+# === NOTE: Change this for different deployment ===
 # What is URL for bitdrop
 export BITDROP_SERVER="https://b2.seiu.org"
+export VITE_BITDROP_SERVER=${BITDROP_SERVER}
+
+# Shared secret for email authentication
+export EMAIL_AUTH_TOKEN=$(head -c12 /dev/random | base64)
+export "VITE_EMAIL_AUTH_TOKEN=$EMAIL_AUTH_TOKEN"
+
+# Avoid any `.env` files from prior deployments
+rm -f .env server/.env frontend/.env
 
 # Install tools used by the script, if not present
 sudo apt-get -y install net-tools jq coreutils 
@@ -8,9 +18,6 @@ sudo apt-get -y install net-tools jq coreutils
 # Install uv
 export PATH="$PATH:$HOME/.local/bin"
 curl -LsSf https://astral.sh/uv/install.sh | sh;
-
-# Include ada-unified dir in PYTHONPATH
-export PYTHONPATH="$PYTHONPATH:$HOME/ada-unified/server"
 
 # Download and install nvm:
 curl -so- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
@@ -35,17 +42,17 @@ for pid in $(lsof -t -i:3000); do
     kill -9 $pid || true
 done
 
-# Shut down anything on port 3000
+# Shut down anything on port 8443
 echo "Killing any process(es) on port 8443"
 for pid in $(lsof -t -i:8443); do
     kill -9 $pid || true
 done
 
 # Start the Node server
-echo "TODO: Launching the Node server..."
+echo "Launching the Node server..."
 cd $HOME/bitdrop/frontend
 npm --silent install --production
-npm install vite # TODO: Is this really a sound approach?
+npm install vite 
 npm run build
 # Check for npm install errors
 if [ $? -ne 0 ]; then
