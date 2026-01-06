@@ -56,18 +56,6 @@ arrived, for whatever reason.
 A route purely for testing that a server is running. Returns a simple welcome
 message.
 
-## POST authentication
-
-The frontend will send a Google recaptcha token for the backend to verify.
-
-```json
-{
-  "recaptchaToken": "token",
-}
-```
-
-The response is a JSON `true` or `false`
-
 ## POST upload-chunk
 
 To accomodate sending large files from computers with limited memory and/or
