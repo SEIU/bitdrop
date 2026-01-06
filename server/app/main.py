@@ -40,10 +40,6 @@ class CompleteUpload(BaseModel):
     unit_test: bool = False
 
 
-class Captcha(BaseModel):
-    recaptchaToken: str
-
-
 class Chunk(BaseModel):
     fileId: uuid.UUID
     chunkIndex: int
@@ -51,29 +47,9 @@ class Chunk(BaseModel):
     encryptedData: str
 
 
-def verify_recaptcha(response_token, secret_key, remote_ip=None):
-    "Verify the captcha used to prevent usage by robots"
-    url = "https://www.google.com/recaptcha/api/siteverify"
-    data = {"secret": secret_key, "response": response_token, "remoteip": remote_ip}
-    response = requests.post(url, data=data, verify=True)
-    result = response.json()
-    return result.get("success", False)
-
-
 @app.get("/")
 async def root() -> str:
     return "Welcome to SEIU BitDrop!"
-
-
-@app.post("/authentication")
-async def authentication(token: Captcha) -> JSONResponse:
-    "Verify the captcha use to prevent usage by robots"
-    verified = verify_recaptcha(token, recaptcha_secret_key)
-    t = token.recaptchaToken
-    token_fragment = f"{t[:12]}...{t[-12:]}"
-    log(f"POST authentication: {token_fragment=} {verified=}")
-    verified = True  # For now, always accept the captcha
-    return JSONResponse(content=verified)
 
 
 @app.post("/upload-chunk")

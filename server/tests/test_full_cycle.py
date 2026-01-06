@@ -29,22 +29,11 @@ def setup():
 
 
 def test_root(setup, cleanup):
+    _ = cleanup
     client, _tokens = setup
     response = client.get("/")
     assert response.status_code == 200
     assert response.json() == "Welcome to SEIU BitDrop!"
-
-
-def test_authentication(setup):
-    client, _tokens = setup
-    body = {
-        "recaptchaToken": "dummy-token",
-    }
-    # Will temporarily get trivial authentication, later with proper implementation,
-    # this will start failing. but either way, we want a 200 and a boolean response
-    response = client.post("authentication", json=body)
-    assert response.status_code == 200
-    assert response.json() in (True, False)
 
 
 @pytest.mark.parametrize("chunkIndex", [1, 2, 3])
