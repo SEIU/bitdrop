@@ -22,11 +22,11 @@ wireframe:
 
 After submitting, additional screen elements will appear, resembling:
 
-| SEIU BitDrop    |                                              |
-|:---------------------------------------------------------------|
-| Files will be deleted after 24 hours or at first download.    ||
-| Send PW via a separate channel from the email address used\!  || 
-| Password:       | prefilled-passphrase-random-words            |
+| SEIU BitDrop                       |                           |
+|:---------------------------------: | :------------------------ |
+| Files will be deleted              | Send PW via a separate    |
+| after 24 hours or at 1st download. | channel from email        |
+| Password:                          | pw-random-words           |
 | **\[Send Another File\]**                                     ||
 
 When recipient clicks a URL like https://b.seiu.org/verify?id=913AEAB4-00E0,
