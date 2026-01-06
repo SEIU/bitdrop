@@ -159,7 +159,11 @@ async def complete_upload(
         Path(file_dir / Path(chunk).name).write_text(content)
     shutil.rmtree(save_dir)
 
-    # Send the email
+    # --- Send the email ---
+    # NOTE: This code uses AWS SES to send emails.  In a different deployment, 
+    # you may choose a different email service provider.
+    # TODO: refactor the email sending logic to a different module for ease in
+    # implementing with different deplooyments.
     response = None  # Re-bound when sending email
     if not body.unit_test and not os.environ.get("BITDROP_NO_EMAIL"):
         ses_client = boto3.client("ses", region_name="us-west-2")
