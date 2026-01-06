@@ -1,9 +1,10 @@
 import axios from "axios";
+const BITDROP_SERVER = import.meta.env.VITE_BITDROP_SERVER;
 
 const baseURL =
   window.location.hostname === "localhost"
     ? "http://127.0.0.1:8000"
-    : "https://api.b2.seiu.org";
+    : BITDROP_SERVER;
 
 const api = axios.create({
   baseURL: baseURL,
