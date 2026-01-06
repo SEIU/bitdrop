@@ -15,17 +15,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Add secrets to repository checkout
-        env:
-          environment: ${{ secrets.ENVIRONMENT }}
-          recaptcha: ${{ secrets.RECAPTCHA }}
-        run: |
-          echo "${environment}" > $PWD/frontend/.env
-          echo "${recaptcha}" > $PWD/server/.env
-          EMAIL_AUTH_TOKEN=$(head -c12 /dev/random | base64)
-          echo "VITE_EMAIL_AUTH_TOKEN=$EMAIL_AUTH_TOKEN" >> $PWD/frontend/.env
-          echo "EMAIL_AUTH_TOKEN=$EMAIL_AUTH_TOKEN" >> $PWD/server/.env
-
       - name: Run backend tests
         run: |
           export PATH="$PATH:$HOME/.local/bin"
