@@ -11,7 +11,7 @@ export VITE_EMAIL_AUTH_TOKEN="${EMAIL_AUTH_TOKEN}"
 
 # Customized branding for UI
 export VITE_ORG_NAME="SEIU"
-export VITE_APP_NAME="Bitdrop"
+export VITE_APP_NAME="BitDrop"
 
 # Avoid any `.env` files from prior deployments
 rm -f .env server/.env frontend/.env

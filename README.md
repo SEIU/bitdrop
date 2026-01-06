@@ -5,6 +5,9 @@ International Union.  You are very welcome to utilize it, but you must change
 elements identifying the deployment as belonging to SEIU.  Changing branding
 is discussed in [BRANDING.md](docs/BRANDING.md).
 
+Although not "branding" per se, that document also contains discussion of
+changes that will be needed in the `deploy.sh` script.
+
 # User Interface
 
 The interface of "new BitDrop" resembles the prevous implementation. In simple
