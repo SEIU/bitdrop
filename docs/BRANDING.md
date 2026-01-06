@@ -6,7 +6,7 @@ ports 3000 and 8443.  Typically those will not be the final ports, but a proxy
 server will generally rename ports or DNS entries, and will provide signed TLS
 certificates.
 
-In the first few lines the `deploy.sh` script, we define several environment
+In the first few lines of the `deploy.sh` script, we define several environment
 variables.  `BITDROP_SERVER` and `VITE_BITDROP_SERVER` define the URLs used to
 access the FastAPI/Gunicorn backend and that will be used in email sent from
 the server.  These must be changed to reflect your deployment (or you may
