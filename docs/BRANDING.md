@@ -27,3 +27,10 @@ substitute something different in identifying your implementation.  The file
 restricted, but the "SEIU purple" color used in the banner is strongly
 identified with SEIU branding across assets and systems.  We would appreciate
 if you vary from that specific color element in your branding.
+
+The file `frontend/public/favicon.ico` is the a used by the SEIU
+deployment.  It is simply the letter "B" rendered in purple and in a font
+similar to those used by other SEIU assets.  You may use this icon if you
+wish, but especially if you use a different name for you deployment, the "B"
+may be less descriptive.  You may also wish to change the icon color to
+harmonize with other color elements you choose within `theme.js`.
