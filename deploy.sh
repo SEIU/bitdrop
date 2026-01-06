@@ -3,11 +3,11 @@
 # === NOTE: Change this for different deployment ===
 # What is URL for bitdrop
 export BITDROP_SERVER="https://b2.seiu.org"
-export VITE_BITDROP_SERVER=${BITDROP_SERVER}
+export VITE_BITDROP_SERVER="https://api.b2.seiu.org"
 
 # Shared secret for email authentication
-export EMAIL_AUTH_TOKEN=$(head -c12 /dev/random | base64)
-export "VITE_EMAIL_AUTH_TOKEN=$EMAIL_AUTH_TOKEN"
+export EMAIL_AUTH_TOKEN="$(head -c12 /dev/random | base64)"
+export VITE_EMAIL_AUTH_TOKEN="${EMAIL_AUTH_TOKEN}"
 
 # Avoid any `.env` files from prior deployments
 rm -f .env server/.env frontend/.env
