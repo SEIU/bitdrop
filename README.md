@@ -1,27 +1,36 @@
+# Customization
+
+This software was originally implemented by and for Service Employees
+International Union.  You are very welcome to utilize it, but you must change
+elements identifying the deployment as belonging to SEIU.  Changing branding
+is discussed in [BRANDING.md](docs/BRANDING.md).
+
 # User Interface
 
-The interface of "new BitDrop" resembles the prevous implementation. In simple wireframe:
+The interface of "new BitDrop" resembles the prevous implementation. In simple
+wireframe:
 
 ---
 
 | SEIU BitDrop    |                                              |
 | --------------: | :------------------------------------------- | 
-| Password:       | prefilled-passphrase-random-words            |
 | Choose File:    | \<file-selection-widget\>                    |
 | Email Files To: | \<enter-email-address\> (URL not shown)      |
-| Deletion Link:  | b.seiu.org/delete?id=kETG3DX0Hs              |
-| **\[Upload Now\]**                                            ||
-
-| Notices
-|:---------------------------------------------------------------:
-| Files will be deleted after 24 hours or at first download. 
-| Send PW via a separate channel from the email address used\!  
+| **\[Submit\]**                                                ||
 
 ---
 
+After submitting, additional screen elements will appear, resembling:
+
+| SEIU BitDrop    |                                              |
+|:---------------------------------------------------------------|
+| Files will be deleted after 24 hours or at first download.    ||
+| Send PW via a separate channel from the email address used\!  || 
+| Password:       | prefilled-passphrase-random-words            |
+| **\[Send Another File\]**                                     ||
+
 When recipient clicks a URL like https://b.seiu.org/verify?id=913AEAB4-00E0,
-that was sent to them by email, they will see a screen similar to the old
-interface:
+that was sent to them by email, they will see a screen similar:
 
 ---
 
