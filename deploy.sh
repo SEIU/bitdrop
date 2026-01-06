@@ -9,6 +9,10 @@ export VITE_BITDROP_SERVER="https://api.b2.seiu.org"
 export EMAIL_AUTH_TOKEN="$(head -c12 /dev/random | base64)"
 export VITE_EMAIL_AUTH_TOKEN="${EMAIL_AUTH_TOKEN}"
 
+# Customized branding for UI
+export VITE_ORG_NAME="SEIU"
+export VITE_APP_NAME="Bitdrop"
+
 # Avoid any `.env` files from prior deployments
 rm -f .env server/.env frontend/.env
 
