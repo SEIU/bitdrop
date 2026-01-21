@@ -57,7 +57,7 @@ that was sent to them by email, they will see a screen similar:
 4. Generate a random token for the upload, download, and delete routes, and to
    display within the deletion link.
 5. After a file is selected, encrypt it within the browser using standard
-   SubtleCrypto developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/encrypt.
+   [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/).
    Use AES-GCM mode.
 6. Post the encrypted content to the backend.
 
