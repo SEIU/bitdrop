@@ -54,10 +54,9 @@ that was sent to them by email, they will see a screen similar:
 2. Upload a file into local memory within the browser (i.e. contents in a
    variable or a buffer).
 3. Require entry of something that looks more-or-less like an email address.
-4. Generate a random token for the upload, download, and delete routes, and to
-   display within the deletion link.
+4. Generate a random token for the upload, download, and delete routes.
 5. After a file is selected, encrypt it within the browser using standard
-   SubtleCrypto developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/encrypt.
+   [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/).
    Use AES-GCM mode.
 6. Post the encrypted content to the backend.
 
