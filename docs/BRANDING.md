@@ -12,6 +12,16 @@ access the FastAPI/Gunicorn backend and that will be used in email sent from
 the server.  These must be changed to reflect your deployment (or you may
 choose to deploy by other mechanisms than this script).
 
+Email is sent using AWS SES. If you wish to use a different email service, you
+will need to create an appropriate implementation.  In `server/app/utils.py`
+there is a function defined `send_ses_email()` for SEIU use.  For your own,
+you should implement a function to import as:
+
+```python
+from app.customize import send_email_my_way as send_email
+```
+
+
 # Visual Changes
 
 The variables `VITE_ORG_NAME` and `VITE_APP_NAME` in `deploy.sh` control

@@ -3,21 +3,15 @@ import os
 from pathlib import Path
 import shutil
 from typing import Literal
-import uuid
 
-import boto3
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
-from pydantic import BaseModel, EmailStr
-import requests
 
-from app.utils import decrypt, log
+from app.utils import decrypt, log, send_ses_email as send_email, CompleteUpload, Chunk
 
 load_dotenv()
-bitdrop = os.getenv("BITDROP_SERVER")
-recaptcha_secret_key = os.getenv("RECAPTCHA_SECRET_KEY")
 email_auth_token = os.getenv("EMAIL_AUTH_TOKEN")
 
 app = FastAPI()
@@ -28,23 +22,6 @@ app.add_middleware(
     allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
-
-
-class CompleteUpload(BaseModel):
-    fileId: uuid.UUID
-    fileHash: str
-    email: EmailStr
-    filename: str
-    emailAuthToken: str | None = None
-    message: str = "Someone has shared a file with you on SEIU BitDrop!"
-    unit_test: bool = False
-
-
-class Chunk(BaseModel):
-    fileId: uuid.UUID
-    chunkIndex: int
-    totalChunks: int
-    encryptedData: str
 
 
 @app.get("/")
@@ -160,41 +137,22 @@ async def complete_upload(
     shutil.rmtree(save_dir)
 
     # --- Send the email ---
-    # NOTE: This code uses AWS SES to send emails.  In a different deployment, 
+    # NOTE: This code uses AWS SES to send emails.  In a different deployment,
     # you may choose a different email service provider.
     # TODO: refactor the email sending logic to a different module for ease in
-    # implementing with different deplooyments.
-    response = None  # Re-bound when sending email
+    # implementing with different deployments.
     if not body.unit_test and not os.environ.get("BITDROP_NO_EMAIL"):
-        ses_client = boto3.client("ses", region_name="us-west-2")
-        email_body = (
-            f"{body.message}\n\nDownload the file {body.filename} "
-            f"from {bitdrop}/verify?id={body.fileId}"
+        return send_email(body, ts)
+    else:
+        return JSONResponse(
+            content={
+                "fileId": str(body.fileId),
+                "filename": body.filename,
+                "timestamp": ts,
+                "MessageId": None,
+                "link": f"/verify?id={body.fileId}",
+            }
         )
-        msg = {
-            "Source": "bitdrop@mail.dsa.seiu.org",
-            "Destination": {"ToAddresses": [body.email]},
-            "Message": {
-                "Subject": {"Data": "A file was shared with you on SEIU BitDrop!"},
-                "Body": {"Text": {"Data": email_body}},
-            },
-        }
-        try:
-            response = ses_client.send_email(**msg)
-        except Exception as e:
-            return JSONResponse(
-                content={"message": f"Failed to send email: {str(e)}"}, status_code=500
-            )
-
-    return JSONResponse(
-        content={
-            "fileId": str(body.fileId),
-            "filename": body.filename,
-            "timestamp": ts,
-            "MessageId": None if not response else response.get("MessageId"),
-            "link": f"/verify?id={body.fileId}",
-        }
-    )
 
 
 @app.get("/count-chunks/{file_id}")

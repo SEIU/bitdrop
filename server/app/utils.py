@@ -3,11 +3,21 @@ from collections import namedtuple
 from datetime import datetime
 from hashlib import sha256
 import io
+import os
 from pathlib import Path
+import uuid
 
+import boto3
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 from Crypto.Protocol.KDF import PBKDF2
+from dotenv import load_dotenv
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, EmailStr
+
+load_dotenv()
+email_auth_token = os.getenv("EMAIL_AUTH_TOKEN")
+bitdrop = os.getenv("BITDROP_SERVER")
 
 Decrypt = namedtuple(
     "Decrypt",
@@ -15,9 +25,35 @@ Decrypt = namedtuple(
 )
 
 
+class CompleteUpload(BaseModel):
+    fileId: uuid.UUID
+    fileHash: str
+    email: EmailStr
+    filename: str
+    emailAuthToken: str | None = None
+    unit_test: bool = False
+
+
+class Chunk(BaseModel):
+    fileId: uuid.UUID
+    chunkIndex: int
+    totalChunks: int
+    encryptedData: str
+
+
 def derive_key_from_password(password: str, salt: bytes):
     pw_bytes = password.encode()
-    return PBKDF2(pw_bytes, salt, 32, count=300000, hmac_hash_module=SHA256)
+    # The docs (https://pycryptodome.readthedocs.io/en/latest/src/protocol/kdf.html)
+    # state the `password` argument is `str | bytes` but the type checker doesn't
+    # recognize this.  Bytes are needed if Unicode characters outside of ISO 8859-1
+    # are used in the password.
+    return PBKDF2(
+        pw_bytes,  # type: ignore[arg-type]
+        salt,
+        32,
+        count=300000,
+        hmac_hash_module=SHA256,
+    )
 
 
 def decrypt(file_id: str, password: str) -> Decrypt:
@@ -86,3 +122,36 @@ def decrypt(file_id: str, password: str) -> Decrypt:
 
 def log(msg):
     print(f"{datetime.now().isoformat()}: {msg}")
+
+
+def send_ses_email(body: CompleteUpload, timestamp: str) -> JSONResponse:
+    ses_client = boto3.client("ses", region_name="us-west-2")
+    email_body = (
+        "Someone has shared a file with you on SEIU BitDrop!\n\n"
+        f"Download the file {body.filename} "
+        f"from {bitdrop}/verify?id={body.fileId}"
+    )
+    msg = {
+        "Source": "bitdrop@mail.dsa.seiu.org",
+        "Destination": {"ToAddresses": [body.email]},
+        "Message": {
+            "Subject": {"Data": "A file was shared with you on SEIU BitDrop!"},
+            "Body": {"Text": {"Data": email_body}},
+        },
+    }
+    try:
+        response = ses_client.send_email(**msg)
+    except Exception as e:
+        return JSONResponse(
+            content={"message": f"Failed to send email: {str(e)}"}, status_code=500
+        )
+
+    return JSONResponse(
+        content={
+            "fileId": str(body.fileId),
+            "filename": body.filename,
+            "timestamp": timestamp,
+            "MessageId": None if not response else response.get("MessageId"),
+            "link": f"/verify?id={body.fileId}",
+        }
+    )
