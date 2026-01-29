@@ -18,6 +18,7 @@ from pydantic import BaseModel, EmailStr
 load_dotenv()
 email_auth_token = os.getenv("EMAIL_AUTH_TOKEN")
 bitdrop = os.getenv("BITDROP_SERVER")
+from_address = os.getenv("BITDROP_FROM_ADDRESS")
 
 Decrypt = namedtuple(
     "Decrypt",
@@ -132,7 +133,7 @@ def send_ses_email(body: CompleteUpload, timestamp: str) -> JSONResponse:
         f"from {bitdrop}/verify?id={body.fileId}"
     )
     msg = {
-        "Source": "bitdrop@mail.dsa.seiu.org",
+        "Source": f"{from_address}",
         "Destination": {"ToAddresses": [body.email]},
         "Message": {
             "Subject": {"Data": "A file was shared with you on SEIU BitDrop!"},
