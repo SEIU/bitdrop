@@ -2,9 +2,9 @@
 
 # === NOTE: Change this for different deployment ===
 # What is URL for bitdrop
-export BITDROP_SERVER="https://b2.seiu.org"
+export BITDROP_SERVER="https://b.seiu.org"
 export BITDROP_FROM_ADDRESS="bitdrop@mail.dsa.seiu.org"
-export VITE_BITDROP_SERVER="https://api.b2.seiu.org"
+export VITE_BITDROP_SERVER="https://api.b.seiu.org"
 
 # Shared secret for email authentication
 export EMAIL_AUTH_TOKEN="$(head -c12 /dev/random | base64)"
